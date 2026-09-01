@@ -9,6 +9,13 @@ import type { CallEvent, HookPayload } from './types'
  * rather than measurement is consumed here and never leaves: arguments and results
  * become byte counts, error text becomes a class. The returned object is composed
  * of primitives only, so no later stage can write content it was never given.
+ *
+ * `payload.error` is read here for whatever calls this with one, but Claude
+ * Code's own `PostToolUse` payload never carries it: a failed tool call fires
+ * the separate `PostToolUseFailure` event instead, which Ariadne does not
+ * subscribe to. So `ok` and `err` are structurally always `true` and `null` for
+ * every event this hook actually records today; nothing downstream presents
+ * them as a measured failure rate.
  * @param payload The hook payload.
  * @param ms Wall time from PreToolUse, or null when the pair was not matched.
  * @returns A recordable event, or null when the payload is not a tool call.

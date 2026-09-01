@@ -1,5 +1,5 @@
 import { readCalls, readConns, readProbes } from './ledger'
-import { estimateTokens, findings, serverKey, type LedgerSlice } from './findings'
+import { estimateTokens, findings, percentile, serverKey, type LedgerSlice } from './findings'
 import type { CallEvent, ProbeEvent } from './types'
 
 /**
@@ -39,11 +39,10 @@ export function sliceFor(opts: { session?: string; project?: string } = {}): Led
  */
 function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEvent[], totalOut: number): string {
   const reached = new Set(calls.map((c) => c.tool)).size
-  const failures = calls.filter((c) => !c.ok).length
   const out = calls.reduce((sum, c) => sum + c.out_bytes, 0)
   const latencies = calls.map((c) => c.ms).filter((m): m is number => m !== null).sort((a, b) => a - b)
-  const p50 = latencies.length >= 5 ? `${latencies[Math.floor(latencies.length / 2)]}ms` : '-'
-  const p95 = latencies.length >= 5 ? `${latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * 0.95))]}ms` : '-'
+  const p50 = latencies.length >= 5 ? `${percentile(latencies, 0.5)}ms` : '-'
+  const p95 = latencies.length >= 5 ? `${percentile(latencies, 0.95)}ms` : '-'
 
   const standing = probe === undefined
     ? 'not probed'
@@ -55,15 +54,13 @@ function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEve
 
   const biggest = calls.reduce<CallEvent | null>((best, c) => (best === null || c.out_bytes > best.out_bytes ? c : best), null)
   const largest = biggest ? `${n(biggest.out_bytes)} bytes, from ${biggest.tool}` : '-'
-  const errors = calls.length === 0 ? '-' : `${n(failures)} of ${n(calls.length)} (${Math.round((failures / calls.length) * 100)}%)`
-  const share = totalOut > 0 ? `${((out / totalOut) * 100).toFixed(1)}% of bytes returned` : '-'
+  const share = totalOut > 0 ? `${((out / totalOut) * 100).toFixed(1)}% of MCP bytes returned` : '-'
 
   return [
     `  ${server}`,
     `    standing cost   ${standing}`,
     `    reach           ${reach} tools`,
     `    calls           ${n(calls.length)}`,
-    `    errors          ${errors}`,
     `    returned        ${n(out)} bytes (~${n(estimateTokens(out))} estimated tokens)`,
     `    largest         ${largest}`,
     `    share           ${share}`,
@@ -132,7 +129,8 @@ export function renderReport(slice: LedgerSlice): string {
     }
     for (const [tool, calls] of [...byTool.entries()].sort()) {
       const total = calls.reduce((sum, c) => sum + c.out_bytes, 0)
-      lines.push(`  ${tool}: ${n(calls.length)} calls, ${n(total)} bytes returned, ${n(Math.round(total / calls.length))} bytes median`)
+      const sizes = calls.map((c) => c.out_bytes).sort((a, b) => a - b)
+      lines.push(`  ${tool}: ${n(calls.length)} calls, ${n(total)} bytes returned, ${n(percentile(sizes, 0.5))} bytes median`)
     }
     lines.push('')
   }

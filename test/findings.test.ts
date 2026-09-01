@@ -7,7 +7,7 @@ const probe = (server: string, tools: { name: string; desc?: string; hash?: stri
   server, transport: 'stdio', ok: true, connect_ms: 100,
   tool_count: tools.length, defs_bytes: defs,
   tools: tools.map((t) => ({
-    name: t.name, desc: t.desc ?? 'does a thing', desc_bytes: (t.desc ?? 'does a thing').length,
+    name: t.name, desc_bytes: (t.desc ?? 'does a thing').length,
     schema_bytes: 100, schema_hash: t.hash ?? `hash-${t.name}`,
   })),
 })
@@ -159,6 +159,29 @@ describe('twice over', () => {
     const probes = [probe('a', [{ name: 'x', hash: 'same' }]), probe('b', [{ name: 'y', hash: 'same' }])]
     expect(findings(slice({ probes })).find((f) => f.id === 'twice-over')?.evidence.join(' '))
       .toContain('name and schema')
+  })
+
+  it('does not report a server as a duplicate of itself under two spellings', () => {
+    // The same server, probed twice under two spellings that share one serverKey.
+    // Keying the "latest probe per server" map on the raw name (rather than
+    // serverKey) would keep both as if they were two servers exposing the same
+    // schema hash, and wrongly report the server as a duplicate of itself.
+    const probes = [
+      probe('claude.ai Gmail', [{ name: 'send', hash: 'h1' }]),
+      { ...probe('claude_ai_Gmail', [{ name: 'send', hash: 'h1' }]), ts: '2026-09-01T11:00:00.000Z' },
+    ]
+    expect(findings(slice({ probes })).map((x) => x.id)).not.toContain('twice-over')
+  })
+
+  it('stays silent on two short, unrelated tool names that merely share a substring', () => {
+    // `search` inside `ctx_search`, and `fetch` inside `ctx_fetch_and_index`: a
+    // floating substring match with no length floor used to report these as the
+    // same tool.
+    const probes = [
+      probe('a', [{ name: 'search', hash: 'sh1' }, { name: 'fetch', hash: 'sh2' }]),
+      probe('b', [{ name: 'ctx_search', hash: 'sh3' }, { name: 'ctx_fetch_and_index', hash: 'sh4' }]),
+    ]
+    expect(findings(slice({ probes })).map((x) => x.id)).not.toContain('twice-over')
   })
 })
 

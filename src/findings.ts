@@ -68,27 +68,48 @@ function n(value: number): string {
 }
 
 /**
+ * Nearest-rank percentile of an ascending-sorted list.
+ *
+ * The one percentile rule for the whole codebase, so a p50 in the table and a
+ * median in a finding never disagree about what "the middle" means. Nearest-rank
+ * always names an element that was actually observed, unlike averaging the two
+ * middle values of an even-length list, which can name a latency or a byte count
+ * nothing ever measured.
+ * @param sorted The values, already sorted ascending.
+ * @param p The percentile as a fraction: `0.5` for the median, `0.95` for p95.
+ * @returns The value at that percentile, or 0 for an empty list.
+ */
+export function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0
+  const idx = Math.min(sorted.length - 1, Math.ceil(sorted.length * p) - 1)
+  return sorted[idx] ?? 0
+}
+
+/**
  * The median of a list, or 0 when it is empty.
  * @param values The values.
  * @returns The median.
  */
 function median(values: number[]): number {
-  if (values.length === 0) return 0
-  const s = [...values].sort((a, b) => a - b)
-  const mid = Math.floor(s.length / 2)
-  return s.length % 2 === 0 ? ((s[mid - 1] ?? 0) + (s[mid] ?? 0)) / 2 : (s[mid] ?? 0)
+  return percentile([...values].sort((a, b) => a - b), 0.5)
 }
 
 /**
  * The last probe for each server, which is the one describing what is installed now.
+ *
+ * Keyed on `serverKey`, never the raw server string, for the same reason every
+ * other join in this file is: one server can arrive spelled two ways across two
+ * probe files, and keying on the raw string would keep both as if they were
+ * different servers, which is exactly the shape of a false "twice over".
  * @param probes Every probe in the slice.
  * @returns One probe per server.
  */
 function latestProbes(probes: ProbeEvent[]): Map<string, ProbeEvent> {
   const out = new Map<string, ProbeEvent>()
   for (const p of probes) {
-    const prev = out.get(p.server)
-    if (!prev || p.ts > prev.ts) out.set(p.server, p)
+    const key = serverKey(p.server)
+    const prev = out.get(key)
+    if (!prev || p.ts > prev.ts) out.set(key, p)
   }
   return out
 }
@@ -103,6 +124,30 @@ function latestProbes(probes: ProbeEvent[]): Map<string, ProbeEvent> {
  */
 function normaliseToolName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+/** Below this many normalised characters, two names must match exactly. */
+const MIN_NAME_MATCH_LENGTH = 8
+
+/**
+ * Whether two normalised tool names name the same job.
+ *
+ * Below the length floor, a short name like `search` or `fetch` is common
+ * enough on its own that matching it as a floating substring catches nothing
+ * but noise: `search` inside `ctx_search`, `fetch` inside `ctx_fetch_and_index`.
+ * At or above the floor, one name may still be the other with a qualifier
+ * anchored to either end, `docker_list_containers` against `list_containers`,
+ * without matching a name that merely contains the other somewhere in its
+ * middle.
+ * @param a One normalised name.
+ * @param b The other normalised name.
+ * @returns Whether they should be treated as the same tool.
+ */
+function sameTool(a: string, b: string): boolean {
+  if (a === b) return true
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a]
+  if (shorter.length < MIN_NAME_MATCH_LENGTH) return false
+  return longer.startsWith(shorter) || longer.endsWith(shorter)
 }
 
 /**
@@ -247,7 +292,7 @@ function twiceOver(slice: LedgerSlice): Finding[] {
       byHash.set(t.schema_hash, h)
 
       const key = normaliseToolName(t.name)
-      const seen = [...byName.keys()].find((k) => k.includes(key) || key.includes(k)) ?? key
+      const seen = [...byName.keys()].find((k) => sameTool(k, key)) ?? key
       const set = byName.get(seen) ?? new Set()
       set.add(p.server)
       byName.set(seen, set)
