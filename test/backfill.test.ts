@@ -59,6 +59,13 @@ describe('parseCcLogLine', () => {
     const weird = JSON.stringify({ debug: 'Successfully connected (transport: carrierpigeon) in 5ms', timestamp: 't', sessionId: 's', cwd: '/root/x' })
     expect(parseCcLogLine(weird, 'x', 'f')?.transport).toBe('other')
   })
+
+  it('recognises a hyphenated transport as a success', () => {
+    const line = JSON.stringify({ debug: 'Successfully connected (transport: claudeai-proxy) in 2ms', timestamp: 't', sessionId: 's', cwd: '/root/x' })
+    const e = parseCcLogLine(line, 'claude-ai-Gmail', 'f')
+    expect(e?.ok).toBe(true)
+    expect(e?.transport).toBe('other')
+  })
 })
 
 describe('backfill', () => {

@@ -46,6 +46,12 @@ describe('paid for, never used', () => {
     const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }], 12345)] }))
     expect(f.find((x) => x.id === 'paid-for-never-used')?.evidence.join(' ')).toContain('12,345 bytes')
   })
+
+  it('treats one server spelled three ways as one server', () => {
+    const probes = [probe('claude.ai Gmail', [{ name: 'send' }])]
+    const calls = [{ ...call('claude_ai_Gmail', 'send') }]
+    expect(findings(slice({ probes, calls })).map((x) => x.id)).not.toContain('paid-for-never-used')
+  })
 })
 
 describe('larger than advertised', () => {
@@ -96,6 +102,34 @@ describe('configured, absent', () => {
       conn('argos', false, '2026-08-27T10:00:00.000Z', 's2'),
     ]
     expect(findings(slice({ conns })).find((x) => x.id === 'configured-absent')?.derivedFrom).toContain('cc-log')
+  })
+
+  it('matches a connection logged under a different spelling', () => {
+    const probes = [probe('claude.ai Gmail', [{ name: 'send' }])]
+    const conns = [
+      conn('claude-ai-Gmail', false, '2026-08-25T10:00:00.000Z', 's1'),
+      conn('claude-ai-Gmail', false, '2026-08-27T10:00:00.000Z', 's2'),
+    ]
+    const f = findings(slice({ probes, conns }))
+    expect(f.map((x) => x.id)).toContain('configured-absent')
+    expect(f.find((x) => x.id === 'configured-absent')?.title).toContain('claude')
+  })
+
+  it('does not call a server absent when it is no longer configured at all', () => {
+    const probes = [probe('present', [{ name: 'a' }])]
+    const conns = [
+      conn('removed-long-ago', false, '2026-04-01T10:00:00.000Z', 's1'),
+      conn('removed-long-ago', false, '2026-04-03T10:00:00.000Z', 's2'),
+    ]
+    expect(findings(slice({ probes, conns })).map((x) => x.id)).not.toContain('configured-absent')
+  })
+
+  it('still reports absent servers when no probe has run yet', () => {
+    const conns = [
+      conn('argos', false, '2026-08-25T10:00:00.000Z', 's1'),
+      conn('argos', false, '2026-08-27T10:00:00.000Z', 's2'),
+    ]
+    expect(findings(slice({ conns })).map((x) => x.id)).toContain('configured-absent')
   })
 })
 

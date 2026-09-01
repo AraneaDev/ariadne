@@ -106,6 +106,20 @@ function normaliseToolName(name: string): string {
 }
 
 /**
+ * One server's identity across three sources that spell it three ways.
+ *
+ * Claude Code's logs name a server `claude-ai-Gmail`, `claude mcp list` calls the
+ * same server `claude.ai Gmail`, and its tool names carry `claude_ai_Gmail`. Any
+ * rule that joins a probe to a call or a connection has to agree on which server it
+ * is looking at, so every join goes through this and every display does not.
+ * @param name A server name from any source.
+ * @returns A key that is equal for equal servers.
+ */
+function serverKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+/**
  * A server was probed and never called.
  *
  * The first finding people install for. It names what the server costs per request
@@ -114,9 +128,9 @@ function normaliseToolName(name: string): string {
  * @returns At most one finding.
  */
 function paidForNeverUsed(slice: LedgerSlice): Finding[] {
-  const called = new Set(slice.calls.filter((c) => c.server !== null).map((c) => c.server as string))
+  const called = new Set(slice.calls.filter((c) => c.server !== null).map((c) => serverKey(c.server as string)))
   const idle = [...latestProbes(slice.probes).values()]
-    .filter((p) => p.ok && p.tool_count > 0 && !called.has(p.server))
+    .filter((p) => p.ok && p.tool_count > 0 && !called.has(serverKey(p.server)))
   if (idle.length === 0) return []
 
   const total = idle.reduce((sum, p) => sum + p.defs_bytes, 0)
@@ -143,7 +157,7 @@ function largerThanAdvertised(slice: LedgerSlice): Finding[] {
   for (const probe of latestProbes(slice.probes).values()) {
     for (const tool of probe.tools) {
       const sizes = slice.calls
-        .filter((c) => c.server === probe.server && c.tool === tool.name && c.ok)
+        .filter((c) => c.server !== null && serverKey(c.server) === serverKey(probe.server) && c.tool === tool.name && c.ok)
         .map((c) => c.out_bytes)
       // A tool called once is not a measurement.
       if (sizes.length < MIN_CALLS_FOR_SIZE) continue
@@ -170,15 +184,28 @@ function largerThanAdvertised(slice: LedgerSlice): Finding[] {
  * @returns One finding per absent server.
  */
 function configuredAbsent(slice: LedgerSlice): Finding[] {
+  // A probe enumerates what is configured now. Without one there is no roster to
+  // check against, which is the state right after a backfill, so nothing is filtered.
+  const known = new Set([...latestProbes(slice.probes).values()].map((p) => serverKey(p.server)))
+  const gate = (server: string): boolean => known.size === 0 || known.has(serverKey(server))
+
+  // Prefer the roster's own spelling for display; fall back to whatever the logs used.
+  const displayName = new Map<string, string>()
+  for (const p of latestProbes(slice.probes).values()) displayName.set(serverKey(p.server), p.server)
+
   const byServer = new Map<string, ConnEvent[]>()
   for (const c of slice.conns) {
-    const list = byServer.get(c.server) ?? []
+    const key = serverKey(c.server)
+    const list = byServer.get(key) ?? []
     list.push(c)
-    byServer.set(c.server, list)
+    byServer.set(key, list)
+    if (!displayName.has(key)) displayName.set(key, c.server)
   }
 
   const out: Finding[] = []
-  for (const [server, events] of byServer) {
+  for (const [key, events] of byServer) {
+    if (!gate(key)) continue
+    const server = displayName.get(key) ?? key
     const sorted = [...events].sort((a, b) => (a.ts < b.ts ? -1 : 1))
     const lastOk = sorted.filter((e) => e.ok).at(-1)
     const failures = sorted.filter((e) => !e.ok && (!lastOk || e.ts > lastOk.ts))
@@ -236,14 +263,14 @@ function twiceOver(slice: LedgerSlice): Finding[] {
 
   const callsByServer = new Map<string, number>()
   for (const c of slice.calls) {
-    if (c.server) callsByServer.set(c.server, (callsByServer.get(c.server) ?? 0) + 1)
+    if (c.server) callsByServer.set(serverKey(c.server), (callsByServer.get(serverKey(c.server)) ?? 0) + 1)
   }
 
   return [...pairs].map((pair) => ({
     id: 'twice-over' as const,
     title: `${pair} expose tools that do the same thing`,
     evidence: [
-      ...pair.split(' and ').map((s) => `${s}: ${callsByServer.get(s) ?? 0} calls recorded.`),
+      ...pair.split(' and ').map((s) => `${s}: ${callsByServer.get(serverKey(s)) ?? 0} calls recorded.`),
       'Matched on name and schema only. A near-copy under an unrelated name would not be caught.',
     ],
     derivedFrom: ['probe', 'hook'] as Source[],
@@ -259,7 +286,7 @@ function lowReach(slice: LedgerSlice): Finding[] {
   const out: Finding[] = []
   for (const probe of latestProbes(slice.probes).values()) {
     if (!probe.ok || probe.tool_count < WIDE_SERVER_TOOLS) continue
-    const calls = slice.calls.filter((c) => c.server === probe.server)
+    const calls = slice.calls.filter((c) => c.server !== null && serverKey(c.server) === serverKey(probe.server))
     if (calls.length === 0) continue
     const sessions = new Set(calls.map((c) => c.session)).size
     if (sessions < MIN_REACH_SESSIONS) continue

@@ -36,7 +36,7 @@ function toTransport(raw: string | undefined): Transport {
 }
 
 /** `Successfully connected (transport: stdio) in 405ms` */
-const CONNECTED = /Successfully connected \(transport: (\w+)\)/
+const CONNECTED = /Successfully connected \(transport: ([\w-]+)\)/
 /** Anything that reads as a connection giving up. */
 const FAILED = /Connection (?:failed|closed|error)|failed to connect/i
 
