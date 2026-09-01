@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.5](https://github.com/AraneaDev/ariadne/compare/v0.0.4...v0.0.5) (2026-09-01)
+
+
+### Fixes
+
+* ask for the report in a fenced block ([#7](https://github.com/AraneaDev/ariadne/issues/7)) ([46c6037](https://github.com/AraneaDev/ariadne/commit/46c6037d5b7c89270fee67571e55e7fb61ff2122))
+
 ## [0.0.4](https://github.com/AraneaDev/ariadne/compare/v0.0.3...v0.0.4) (2026-09-01)
 
 
