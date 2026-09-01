@@ -13,7 +13,21 @@ describe('the slash command', () => {
   })
 
   it('runs the report', () => {
-    expect(cmd).toContain('ariadne report')
+    expect(cmd).toContain('src/cli.ts" report')
+  })
+
+  // The command expands the report into the prompt itself, so the CLI runs
+  // whatever the model decides to do. Asserting on prose naming the command
+  // would pass while the thing that actually runs had drifted away from it.
+  it('runs it when the command expands, not when the model chooses to', () => {
+    expect(cmd).toMatch(/^!`[^`]*src\/cli\.ts" report/m)
+  })
+
+  // The report lines its labels and figures up on runs of spaces. Unfenced,
+  // markdown reflows it into a paragraph and the alignment is the casualty.
+  it('asks for the output in a fenced block, kept byte for byte', () => {
+    expect(cmd).toContain('fenced code block')
+    expect(cmd).toContain('byte for byte')
   })
 })
 
