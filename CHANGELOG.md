@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/AraneaDev/ariadne/compare/v0.0.3...v0.0.4) (2026-09-01)
+
+
+### Documentation
+
+* apply an independent language review ([#5](https://github.com/AraneaDev/ariadne/issues/5)) ([1be3a72](https://github.com/AraneaDev/ariadne/commit/1be3a72fb08e932d2487182b381b4990c909716e))
+
 ## [0.0.3](https://github.com/AraneaDev/ariadne/compare/v0.0.2...v0.0.3) (2026-09-01)
 
 
