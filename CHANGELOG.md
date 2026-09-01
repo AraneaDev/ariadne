@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.0.3](https://github.com/AraneaDev/ariadne/compare/v0.0.2...v0.0.3) (2026-09-01)
+
+
+### Documentation
+
+* bring the readme in line with the other repos ([#3](https://github.com/AraneaDev/ariadne/issues/3)) ([0e62af1](https://github.com/AraneaDev/ariadne/commit/0e62af143f7d0a90d70dd9ffb68bc307389036b1))
+* link MCP Observatory ([#4](https://github.com/AraneaDev/ariadne/issues/4)) ([5fa2f8f](https://github.com/AraneaDev/ariadne/commit/5fa2f8f423bfb92e1b114ffec34c3debeb406118))
+
+
+### Continuous integration
+
+* stop linting the generated changelog ([#1](https://github.com/AraneaDev/ariadne/issues/1)) ([220d6a8](https://github.com/AraneaDev/ariadne/commit/220d6a860da78a31cc65adeef1383b91349fb443))
+
 ## [0.0.2](https://github.com/AraneaDev/ariadne/compare/v0.0.1...v0.0.2) (2026-09-01)
 
 
