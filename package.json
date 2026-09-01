@@ -1,0 +1,29 @@
+{
+  "name": "ariadne",
+  "version": "0.0.1",
+  "description": "Measures what your installed MCP servers actually cost you, after install, in real sessions",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "ariadne": "./src/cli.ts" },
+  "engines": { "bun": ">=1.1.0" },
+  "scripts": {
+    "build:hook": "bun run scripts/build-hook.ts",
+    "test": "bun test",
+    "test:coverage": "bun test --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:docs": "markdownlint-cli2",
+    "knip": "knip",
+    "check": "bun run lint && bun run typecheck && bun run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/bun": "latest",
+    "eslint": "^10.9.1",
+    "eslint-plugin-jsdoc": "^64.2.1",
+    "knip": "^6.32.2",
+    "markdownlint-cli2": "^0.23.2",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.68.0"
+  }
+}
