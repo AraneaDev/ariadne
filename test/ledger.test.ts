@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
-import { chmodSync, mkdtempSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { appendCall, appendConn, readCalls, readConns, readProbes, writeProbes } from '../src/ledger'
@@ -28,11 +28,11 @@ describe('appendCall', () => {
     expect(readCalls().map((e) => e.id)).toEqual(['toolu_1', 'toolu_2'])
   })
 
-  it('never throws when the ledger is unwritable', () => {
+  it('never throws when the ledger directory cannot be created', () => {
     const root = process.env.ARIADNE_HOME as string
-    chmodSync(root, 0o500)
+    writeFileSync(join(root, 'calls'), 'not a directory')
     expect(() => appendCall(call)).not.toThrow()
-    chmodSync(root, 0o700)
+    expect(readCalls()).toEqual([])
   })
 })
 
@@ -46,6 +46,12 @@ describe('readCalls', () => {
     const file = join(process.env.ARIADNE_HOME as string, 'calls', '2026-09-01.jsonl')
     await Bun.write(file, `${JSON.stringify(call)}\nnot json at all\n`)
     expect(readCalls()).toHaveLength(1)
+  })
+
+  it('skips a file it cannot read rather than failing the whole read', () => {
+    appendCall(call)
+    mkdirSync(join(process.env.ARIADNE_HOME as string, 'calls', 'unreadable.jsonl'), { recursive: true })
+    expect(readCalls()).toEqual([call])
   })
 })
 
@@ -62,9 +68,27 @@ describe('writeProbes', () => {
     expect(readProbes()).toEqual([probe])
   })
 
-  it('sanitises a hostile session id into a child path', () => {
-    expect(() => writeProbes('../escape', [])).not.toThrow()
-    expect(readProbes()).toEqual([])
+  it('sanitises a hostile session id into a child of the probes directory', () => {
+    const probe: ProbeEvent = {
+      v: 1, t: 'probe', ts: '2026-09-01T12:00:00.000Z', session: 's1',
+      project: 'ariadne-aaaaaaaa', source: 'probe',
+      server: 'knossos', transport: 'stdio', ok: true, connect_ms: 405,
+      tool_count: 1, defs_bytes: 1117,
+      tools: [{ name: 'scan_project', desc: 'Scan a project', desc_bytes: 14, schema_bytes: 903, schema_hash: 'a1b2c3d4e5f60718' }],
+    }
+    writeProbes('../escape', [probe])
+    const dir = join(process.env.ARIADNE_HOME as string, 'probes')
+    const written = readdirSync(dir)
+    expect(written).toHaveLength(1)
+    expect(written[0]).not.toContain('/')
+    expect(existsSync(join(process.env.ARIADNE_HOME as string, '..', 'escape.jsonl'))).toBe(false)
+    expect(readProbes()).toHaveLength(1)
+  })
+
+  it('writes no file for zero probes', () => {
+    expect(() => writeProbes('s1', [])).not.toThrow()
+    const dir = join(process.env.ARIADNE_HOME as string, 'probes')
+    expect(existsSync(dir)).toBe(false)
   })
 })
 

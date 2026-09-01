@@ -77,7 +77,7 @@ export function appendConn(e: ConnEvent): void {
  * Probes get a per-session file rather than a shared daily one because a
  * `tools/list` measurement runs to tens of kilobytes, and an append that large is
  * no longer atomic against a concurrent writer. One writer per file, no
- * interleaving, no locking.
+ * interleaving, no locking. Zero probes writes no file.
  * @param sessionId The session these probes belong to.
  * @param events The probe events to write.
  */
