@@ -135,6 +135,7 @@ export interface Paths {
   calls: string
   probes: string
   conns: string
+  pending: string
   schemaVersion: string
 }
 
@@ -149,6 +150,7 @@ export function paths(): Paths {
     calls: join(root, 'calls'),
     probes: join(root, 'probes'),
     conns: join(root, 'conns'),
+    pending: join(root, 'pending'),
     schemaVersion: join(root, 'schema-version'),
   }
 }
