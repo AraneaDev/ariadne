@@ -37,4 +37,16 @@ describe('the README', () => {
   it('never refers to itself as we', () => {
     expect(readme).not.toMatch(/\b[Ww]e (?:run|built|measure|ship)\b/)
   })
+
+  it('states the build-ladder systemMessage as a named exception, not silently', () => {
+    expect(readme).toContain('The one exception is the first session after install')
+  })
+})
+
+describe('the no-output promise', () => {
+  it('the hook comment names the session-start exception it would otherwise contradict', () => {
+    const hook = read('src/hook.ts')
+    expect(hook).toContain('session-start.sh')
+    expect(hook).toContain('exception')
+  })
 })

@@ -4,10 +4,10 @@
       { "hooks": [ { "type": "command", "command": "sh \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/session-start.sh\"", "timeout": 5 } ] }
     ],
     "PreToolUse": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "\"$CLAUDE_PLUGIN_ROOT/bin/ariadne-hook\"", "timeout": 2 } ] }
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "sh \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/ariadne-hook.sh\"", "timeout": 2 } ] }
     ],
     "PostToolUse": [
-      { "matcher": ".*", "hooks": [ { "type": "command", "command": "\"$CLAUDE_PLUGIN_ROOT/bin/ariadne-hook\"", "timeout": 2 } ] }
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "sh \"$CLAUDE_PLUGIN_ROOT/hooks/scripts/ariadne-hook.sh\"", "timeout": 2 } ] }
     ]
   }
 }

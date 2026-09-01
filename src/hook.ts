@@ -83,8 +83,13 @@ function takeElapsed(toolUseId: string): number | null {
  * Route one hook payload.
  *
  * Always returns null. Ariadne measures the cost of things that sit in a context
- * window, so it puts nothing in one: no `additionalContext`, no `systemMessage`,
- * no output of any kind on any event.
+ * window, so this hook puts nothing in one: no `additionalContext`, no
+ * `systemMessage`, no output of any kind, on either event it handles here.
+ *
+ * The one deliberate exception lives outside this file. `hooks/scripts/session-start.sh`
+ * prints a single `systemMessage`, at most once per install, while its own hook
+ * binary is still building in the background. That script's job is telling you
+ * the plugin cannot start yet; this one's job is never speaking at all.
  * @param payload The hook payload.
  * @returns Always null.
  */

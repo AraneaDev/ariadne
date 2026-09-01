@@ -31,6 +31,17 @@ describe('hooks.json', () => {
     }
   })
 
+  it('routes Pre and Post through the shim, not the binary directly', () => {
+    // The binary is gitignored and built in the background on first install; a
+    // command that invoked it directly would fail with exit 127 for the whole
+    // first session, twice per tool call.
+    for (const event of ['PreToolUse', 'PostToolUse']) {
+      const command: string = hooks[event][0].hooks[0].command
+      expect(command).toContain('ariadne-hook.sh')
+      expect(command).not.toContain('bin/ariadne-hook')
+    }
+  })
+
   it('registers SessionStart for the build ladder and the prober', () => {
     expect(hooks.SessionStart[0].hooks[0].command).toContain('session-start.sh')
   })
@@ -54,5 +65,9 @@ describe('session-start.sh', () => {
     expect(drain).toBeGreaterThan(-1)
     expect(firstExit).toBeGreaterThan(-1)
     expect(drain).toBeLessThan(firstExit)
+  })
+
+  it('carries CLAUDE_PROJECT_DIR into the prober, so it measures the project rather than the plugin cache', () => {
+    expect(sh).toContain('CLAUDE_PROJECT_DIR')
   })
 })
