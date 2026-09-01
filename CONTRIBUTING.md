@@ -16,17 +16,17 @@ bun install
 git config core.hooksPath .githooks
 ```
 
-Reached through `core.hooksPath` rather than copied into `.git/hooks`, so a
-fresh clone gets the hook the moment it installs, with nothing to remember to
-copy by hand.
+The hook is reached through `core.hooksPath` and never copied into
+`.git/hooks`, so a fresh clone gets it the moment it installs, with nothing to
+remember to copy by hand.
 
 ## Checks
 
 ```bash
-bun run lint        # eslint
-bun run typecheck    # tsc --noEmit
-bun run test         # bun test
-bun run lint:docs    # markdownlint against the README and friends
+bun run lint          # eslint
+bun run typecheck     # tsc --noEmit
+bun run test          # bun test
+bun run lint:docs     # markdownlint against the docs
 bun run check         # lint, typecheck and test, in that order
 ```
 
@@ -38,22 +38,21 @@ The pre- and post-tool-use hooks run on every single tool call, in every
 session, for as long as the plugin is installed. A hook that throws does not
 fail quietly: it breaks the tool call it was attached to. So the code on that
 path treats every filesystem operation as something that can fail for reasons
-that have nothing to do with a bug, a session killed mid-write, a directory
-that vanished under it, a marker that raced its own cleanup, and catches
-locally rather than letting an exception reach the caller. `src/hook.ts` is
+that have nothing to do with a bug. A session killed mid-write, a directory
+that vanished under it, a marker that raced its own cleanup. So it catches
+locally, and an exception never reaches the caller. `src/hook.ts` is
 the place to read for the shape of it: small functions, each wrapped in its
 own `try`/`catch`, each comment saying why that particular failure is
 expected rather than exceptional. Adding a new write to that path means
 asking what happens when it fails, not whether it will.
 
 Everything off that path, the CLI, the prober, the backfill importer, can
-raise and report an error normally. The constraint is specific to code a hook
-runs, not a house style for the whole project.
+raise and report an error normally. The constraint applies to code a hook runs.
 
 ## Working on it
 
 Changes go through a pull request. New behaviour needs a test; the suite is
-the actual guarantee behind the claims in the README, not decoration.
+the guarantee behind the claims in the README.
 
 ## Commit messages
 
