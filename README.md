@@ -16,8 +16,7 @@ Per server, per session or across every project on the machine:
 - **calls**, count and per tool
 - **latency**, p50 and p95, above a minimum sample only
 - **result size**, the distribution and the largest single result
-- **errors**, failure rate and connections that never opened
-- **share**, cumulative bytes returned as a fraction of the session
+- **share**, cumulative bytes returned as a fraction of MCP bytes returned
 
 Claude Code's own built-in tools are measured on the same axes, as a baseline.
 They make the MCP numbers legible, and they never produce a finding, because you
@@ -103,11 +102,17 @@ ariadne purge                # delete the ledger
   would be a number pretending to be a judgement.
 - It does not add anything to your context window unless you asked for a report.
   A tool whose subject is the cost of things sitting in your context has no
-  business sitting in it.
+  business sitting in it. The one exception is the first session after install,
+  which prints a single system message while its hook binary builds in the
+  background, and never again after that.
 
-Tool names, descriptions and schema shapes are recorded, deliberately. They are
-the server's published interface rather than your data, and the findings about
-oversized results and duplicated servers cannot be computed without them.
+Tool names and schema shapes are recorded, deliberately. They are the server's
+published interface rather than your data, and the findings about oversized
+results and duplicated servers cannot be computed without them. A description's
+byte length is recorded for the same reason; the description text itself is
+not, because a server that templates its own configuration into its tool text
+could otherwise write a path or a URL straight into the ledger through a field
+no finding needs to read.
 
 ## Honest limits
 
@@ -124,9 +129,9 @@ early costs less than its size suggests.
 Latency includes the work the server actually did, so a slow server and a server
 doing something hard look identical from here.
 
-Standing cost for OAuth remote servers is unmeasured. The prober does not hold
-their credentials and will not read them, so those rows say `unmeasured` rather
-than carrying a guess.
+Standing cost for remote servers is unmeasured. The prober speaks stdio only,
+so an HTTP or SSE server, whether or not it uses OAuth, gets a row that says
+`unmeasured` rather than a guess.
 
 Standing cost for plugin-provided MCP servers is unmeasured too. The prober
 resolves a server's launch command from project `.mcp.json` and user
