@@ -15,13 +15,21 @@ const USAGE = `ariadne: measures what your installed MCP servers cost you
 
 /**
  * Read a flag's value from argv.
+ *
+ * A missing flag, a flag with nothing after it, an empty value and a value that
+ * is itself another flag all mean the same thing: nothing was given. Treating
+ * them as distinct is how a mistyped session id like `--session ""` used to slip
+ * through as the empty string and silently filter the whole report down to
+ * nothing, rather than being treated as no filter at all.
  * @param argv The arguments after the subcommand.
  * @param name The flag name, including its dashes.
  * @returns The value, or undefined.
  */
-function flag(argv: string[], name: string): string | undefined {
+export function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name)
-  return i === -1 ? undefined : argv[i + 1]
+  if (i === -1) return undefined
+  const v = argv[i + 1]
+  return v === undefined || v === '' || v.startsWith('--') ? undefined : v
 }
 
 const [command = 'report', ...rest] = process.argv.slice(2)

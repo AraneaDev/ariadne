@@ -6,7 +6,7 @@ allowed-tools: Bash(ariadne:*), Bash(bun:*)
 Run `ariadne report` for this session and show it to me exactly as printed,
 with no summarising:
 
-!`bun "$CLAUDE_PLUGIN_ROOT/src/cli.ts" report --session "$CLAUDE_SESSION_ID"`
+!`bun "$CLAUDE_PLUGIN_ROOT/src/cli.ts" report --session "$CLAUDE_CODE_SESSION_ID"`
 
 If the report says there are no measurements yet, tell me to run
 `bun "$CLAUDE_PLUGIN_ROOT/src/cli.ts" backfill` to import the connection history
