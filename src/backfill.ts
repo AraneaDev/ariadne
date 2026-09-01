@@ -1,8 +1,10 @@
+import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
 import { appendConn, readConns } from './ledger'
 import { errorClass } from './measure'
+import { projectSlug } from './paths'
 import type { ConnEvent, Transport } from './types'
 
 /**
@@ -21,6 +23,18 @@ export function ccLogRoot(): string {
   return join(home, '.cache', 'claude-cli-nodejs')
 }
 
+/** The transports this codebase understands. Anything else is `other`. */
+const TRANSPORTS = new Set<Transport>(['stdio', 'http', 'sse', 'other'])
+
+/**
+ * Constrain a captured transport name to the closed union.
+ * @param raw The regex capture, which is arbitrary text.
+ * @returns A member of the union, defaulting to `other`.
+ */
+function toTransport(raw: string | undefined): Transport {
+  return raw !== undefined && TRANSPORTS.has(raw as Transport) ? (raw as Transport) : 'other'
+}
+
 /** `Successfully connected (transport: stdio) in 405ms` */
 const CONNECTED = /Successfully connected \(transport: (\w+)\)/
 /** Anything that reads as a connection giving up. */
@@ -35,11 +49,11 @@ const FAILED = /Connection (?:failed|closed|error)|failed to connect/i
  * could say anything about.
  * @param line One raw JSON line.
  * @param server The server the containing directory names.
- * @param project The project slug the containing directory names.
+ * @param project The project tag fallback, used only when the record has no cwd.
  * @returns A connection event, or null.
  */
 export function parseCcLogLine(line: string, server: string, project: string): ConnEvent | null {
-  let rec: { debug?: unknown; error?: unknown; timestamp?: unknown; sessionId?: unknown }
+  let rec: { debug?: unknown; error?: unknown; timestamp?: unknown; sessionId?: unknown; cwd?: unknown }
   try {
     rec = JSON.parse(line) as typeof rec
   } catch {
@@ -53,15 +67,21 @@ export function parseCcLogLine(line: string, server: string, project: string): C
   const failed = FAILED.test(text)
   if (!connected && !failed) return null
 
+  const cwd = typeof rec.cwd === 'string' ? rec.cwd : ''
+  // Prefer the record's own cwd, so a backfilled event lands in the same project as
+  // the hook events for that directory. The directory name is a path with its slashes
+  // swapped for dashes, and a raw path has no business in the ledger.
+  const tag = cwd ? projectSlug(cwd) : project
+
   return {
     v: 1,
     t: 'conn',
     ts: typeof rec.timestamp === 'string' ? rec.timestamp : new Date(0).toISOString(),
     session: typeof rec.sessionId === 'string' ? rec.sessionId : '',
-    project,
+    project: tag,
     source: 'cc-log',
     server,
-    transport: (connected?.[1] as Transport | undefined) ?? 'other',
+    transport: toTransport(connected?.[1]),
     ok: Boolean(connected),
     err: connected ? null : errorClass(text),
   }
@@ -106,7 +126,7 @@ export function backfill(): { added: number; scanned: number } {
   let scanned = 0
 
   for (const projectDir of safeList(root)) {
-    const project = projectDir
+    const fallback = `unknown-${createHash('sha256').update(projectDir).digest('hex').slice(0, 8)}`
     for (const serverDir of safeList(join(root, projectDir))) {
       const m = /^mcp-logs-(.+)$/.exec(serverDir)
       if (!m?.[1]) continue
@@ -122,7 +142,7 @@ export function backfill(): { added: number; scanned: number } {
         }
         for (const line of raw.split('\n')) {
           if (!line.trim()) continue
-          const event = parseCcLogLine(line, server, project)
+          const event = parseCcLogLine(line, server, fallback)
           if (!event) continue
           const k = key(event)
           if (seen.has(k)) continue
