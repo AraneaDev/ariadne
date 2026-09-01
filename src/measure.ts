@@ -34,25 +34,33 @@ export function splitToolName(name: string): { server: string | null; tool: stri
   if (!m) return { server: null, tool: name, builtin: true }
   const [, server, tool] = m
   if (!server || !tool) return { server: null, tool: name, builtin: true }
-  const cut = server.lastIndexOf('__')
-  if (cut === -1) return { server, tool, builtin: false }
-  return { server: server.slice(0, cut), tool: `${server.slice(cut + 2)}__${tool}`, builtin: false }
+  return { server, tool, builtin: false }
 }
 
 /**
- * An error code as servers, transports and libc report them.
+ * The error codes Ariadne is willing to write down.
  *
- * Two shapes only: an errno name (`ECONNREFUSED`), or screaming snake case
- * (`CONNECTION_CLOSED`). Both are narrow enough that arbitrary error prose will not
- * match one, which is the point: the alternative is a wider pattern that
- * occasionally lifts a fragment of a token out of a failing request and writes it
- * to disk.
- *
- * Unanchored, because the code is rarely first. Claude Code reports
- * `Failed to connect - CONNECTION_CLOSED: ...` and its own logs report
- * `Connection failed: CONNECTION_CLOSED: ...`.
+ * A closed list, not a pattern. Matching an error code by its shape means any
+ * secret shaped like a code gets written to the ledger, and a password of
+ * `MY_SUPER_SECRET_PASS` is shaped exactly like a code. Membership cannot be
+ * defeated that way. An unlisted code degrades to `error`, which loses detail and
+ * leaks nothing, and that is the direction this project fails in by design.
  */
-const ERROR_CODE = /\b(E[A-Z]{3,15}|[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)\b/
+const KNOWN_ERROR_CODES = new Set([
+  // MCP and JSON-RPC
+  'CONNECTION_CLOSED', 'CONNECTION_REFUSED', 'CONNECTION_ERROR', 'TRANSPORT_ERROR',
+  'PARSE_ERROR', 'INVALID_REQUEST', 'METHOD_NOT_FOUND', 'INVALID_PARAMS',
+  'INTERNAL_ERROR', 'SERVER_ERROR', 'SERVER_NOT_INITIALIZED', 'REQUEST_TIMEOUT',
+  'TIMEOUT', 'UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'RATE_LIMITED',
+  'RATE_LIMIT_EXCEEDED',
+  // errno
+  'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ETIMEDOUT', 'ENOENT', 'EACCES', 'EPERM',
+  'EADDRINUSE', 'EHOSTUNREACH', 'ENETUNREACH', 'EAGAIN', 'EMFILE', 'ENOMEM',
+  'EISDIR', 'ENOTDIR', 'EEXIST', 'ENOSPC',
+])
+
+/** Enumerates candidate codes in text; never used to accept one, only to find one to check. */
+const ERROR_CODE_CANDIDATE = /\b[A-Z][A-Z0-9_]{2,40}\b/g
 
 /**
  * Reduce an error to a class, never its text.
@@ -66,6 +74,10 @@ const ERROR_CODE = /\b(E[A-Z]{3,15}|[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)\b/
  */
 export function errorClass(text: string | undefined): string | null {
   if (text === undefined || text === null || text === '') return null
-  const m = ERROR_CODE.exec(text)
-  return m?.[1] ?? 'error'
+  const candidates = text.match(ERROR_CODE_CANDIDATE)
+  if (!candidates) return 'error'
+  for (const candidate of candidates) {
+    if (KNOWN_ERROR_CODES.has(candidate)) return candidate
+  }
+  return 'error'
 }

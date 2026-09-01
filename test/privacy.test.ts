@@ -23,6 +23,10 @@ describe('splitToolName', () => {
   it('does not crash on a malformed prefix', () => {
     expect(splitToolName('mcp__')).toEqual({ server: null, tool: 'mcp__', builtin: true })
   })
+
+  it('treats the rightmost double underscore as the separator', () => {
+    expect(splitToolName('mcp__a__b__c')).toEqual({ server: 'a__b', tool: 'c', builtin: false })
+  })
 })
 
 describe('byteLength', () => {
@@ -58,6 +62,17 @@ describe('errorClass', () => {
 
   it('is null when there is no error', () => {
     expect(errorClass(undefined)).toBeNull()
+  })
+
+  it('does not write a credential that happens to look like a code', () => {
+    expect(errorClass('connection string postgres://user:MY_SUPER_SECRET_PASS@host/db failed')).toBe('error')
+    expect(errorClass('token PGPASSWORD=SUPER_SECRET_VALUE_1234 invalid')).toBe('error')
+    expect(errorClass('Missing required env var AWS_SECRET_ACCESS_KEY, aborting')).toBe('error')
+  })
+
+  it('still recognises a listed code anywhere in the text', () => {
+    expect(errorClass('Connection failed: CONNECTION_CLOSED: Connection closed')).toBe('CONNECTION_CLOSED')
+    expect(errorClass('spawn failed with ECONNREFUSED')).toBe('ECONNREFUSED')
   })
 })
 
