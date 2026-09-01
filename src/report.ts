@@ -4,7 +4,6 @@ import type { CallEvent, ProbeEvent } from './types'
 
 /**
  * Format a number with thousands separators.
- *
  * @param value The number.
  * @returns The grouped string.
  */
@@ -14,8 +13,9 @@ function n(value: number): string {
 
 /**
  * Read a slice of the ledger.
- *
  * @param opts Restrict to one session or one project. Both omitted reads everything.
+ * @param opts.session Restrict to this session id, when given.
+ * @param opts.project Restrict to this project slug, when given.
  * @returns The matching events.
  */
 export function sliceFor(opts: { session?: string; project?: string } = {}): LedgerSlice {
@@ -31,7 +31,6 @@ export function sliceFor(opts: { session?: string; project?: string } = {}): Led
 
 /**
  * One row of the per-server table.
- *
  * @param probe The latest probe for the server, if any.
  * @param server The server's display name.
  * @param calls Every call to that server.
@@ -72,7 +71,6 @@ function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEve
  * string. One server can arrive spelled three different ways depending on which
  * source produced the record (Claude Code's logs, `claude mcp list`, or a hook
  * tool name), and matching on the raw string would print it as two servers.
- *
  * @param slice The ledger slice to describe.
  * @returns The printable report.
  */

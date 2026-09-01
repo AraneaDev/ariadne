@@ -1,0 +1,4 @@
+{
+  "globs": ["README.md"],
+  "config": { "MD013": false, "MD033": false }
+}

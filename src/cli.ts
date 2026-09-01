@@ -15,7 +15,6 @@ const USAGE = `ariadne: measures what your installed MCP servers cost you
 
 /**
  * Read a flag's value from argv.
- *
  * @param argv The arguments after the subcommand.
  * @param name The flag name, including its dashes.
  * @returns The value, or undefined.
