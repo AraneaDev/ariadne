@@ -1,0 +1,60 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release PR and GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Checkout the released revision
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v7
+
+      - name: Install Bun
+        if: ${{ steps.release.outputs.release_created }}
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Verify the release
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          bun run typecheck
+          bun run test
+
+      - name: Verify the released version
+        # release-please's extra-files entry keeps .claude-plugin/plugin.json's
+        # version in step with package.json (see release-please-config.json),
+        # and test/scaffold.test.ts asserts the two agree on every run. This
+        # step checks the third leg: the tag itself matches both files, so a
+        # release can never ship a plugin manifest out of sync with the tag
+        # Claude Code installers resolve against.
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          TAG: ${{ steps.release.outputs.tag_name }}
+        run: |
+          package_version="$(bun -e 'console.log(require("./package.json").version)')"
+          plugin_version="$(bun -e 'console.log(require("./.claude-plugin/plugin.json").version)')"
+          echo "tag: $TAG   package.json: $package_version   plugin.json: $plugin_version"
+          test "$TAG" = "v${package_version}"
+          test "$package_version" = "$plugin_version"
