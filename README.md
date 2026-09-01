@@ -1,4 +1,18 @@
+<div align="center">
+
 # Ariadne
+
+**What your installed MCP servers actually cost you, in real sessions.**
+
+[![Release](https://img.shields.io/github/v/release/AraneaDev/ariadne?label=release&include_prereleases)](https://github.com/AraneaDev/ariadne/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/AraneaDev/ariadne/ci.yml?label=CI)](https://github.com/AraneaDev/ariadne/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/AraneaDev/ariadne?label=license&color=yellow)](./LICENSE)
+[![Language](https://img.shields.io/github/languages/top/AraneaDev/ariadne)](https://github.com/AraneaDev/ariadne)
+[![Last commit](https://img.shields.io/github/last-commit/AraneaDev/ariadne?label=last%20commit)](https://github.com/AraneaDev/ariadne/commits/main)
+[![Conventional Commits](https://img.shields.io/badge/commits-conventional-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/)
+[![Status](https://img.shields.io/badge/status-pre--release-orange)](#install)
+
+</div>
 
 Measures what your installed MCP servers actually cost you, after install, in
 real sessions.
