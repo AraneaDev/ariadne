@@ -115,7 +115,7 @@ function normaliseToolName(name: string): string {
  * @param name A server name from any source.
  * @returns A key that is equal for equal servers.
  */
-function serverKey(name: string): string {
+export function serverKey(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
