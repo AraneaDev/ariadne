@@ -14,7 +14,8 @@
     "lint": "eslint .",
     "lint:docs": "markdownlint-cli2",
     "knip": "knip",
-    "check": "bun run lint && bun run typecheck && bun run test"
+    "check": "bun run lint && bun run typecheck && bun run test",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
