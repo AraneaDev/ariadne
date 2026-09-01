@@ -77,4 +77,13 @@ describe('handle', () => {
   it('does not throw on a payload with nothing in it', () => {
     expect(() => handle({})).not.toThrow()
   })
+
+  it('does not throw on a payload whose error field is not a string', () => {
+    expect(() => handle({ ...base, hook_event_name: 'PostToolUse', error: 12345 as unknown as string })).not.toThrow()
+  })
+
+  it('does not throw on a payload that is not an object', () => {
+    expect(() => handle(null as unknown as HookPayload)).not.toThrow()
+    expect(() => handle(42 as unknown as HookPayload)).not.toThrow()
+  })
 })

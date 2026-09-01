@@ -68,12 +68,14 @@ const ERROR_CODE_CANDIDATE = /\b[A-Z][A-Z0-9_]{2,40}\b/g
  * A tool's error output is the output of whatever it ran, and a failing `curl`,
  * `npm` or database driver prints connection strings, tokens and query text. None
  * of that may reach disk. A recognised code survives because it is a fixed
- * vocabulary; everything else collapses to one word.
+ * vocabulary; everything else collapses to one word. A non-string is treated as
+ * absent rather than coerced, so a hostile object cannot reach the filesystem
+ * through `toString`.
  * @param text The raw error text, if any.
  * @returns A code, the literal `error`, or null when nothing failed.
  */
 export function errorClass(text: string | undefined): string | null {
-  if (text === undefined || text === null || text === '') return null
+  if (typeof text !== 'string' || text === '') return null
   const candidates = text.match(ERROR_CODE_CANDIDATE)
   if (!candidates) return 'error'
   for (const candidate of candidates) {

@@ -74,6 +74,11 @@ describe('errorClass', () => {
     expect(errorClass('Connection failed: CONNECTION_CLOSED: Connection closed')).toBe('CONNECTION_CLOSED')
     expect(errorClass('spawn failed with ECONNREFUSED')).toBe('ECONNREFUSED')
   })
+
+  it('treats a non-string as absent rather than coercing it', () => {
+    expect(errorClass(12345 as unknown as string)).toBeNull()
+    expect(errorClass({ toString: () => 'CONNECTION_CLOSED' } as unknown as string)).toBeNull()
+  })
 })
 
 describe('callEventFrom', () => {

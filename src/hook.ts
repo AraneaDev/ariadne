@@ -89,6 +89,7 @@ function takeElapsed(toolUseId: string): number | null {
  * @returns Always null.
  */
 export function handle(payload: HookPayload): null {
+  if (payload === null || typeof payload !== 'object') return null
   const id = typeof payload.tool_use_id === 'string' ? payload.tool_use_id : ''
 
   if (payload.hook_event_name === 'PreToolUse') {
