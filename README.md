@@ -10,7 +10,7 @@
 [![Language](https://img.shields.io/github/languages/top/AraneaDev/ariadne)](https://github.com/AraneaDev/ariadne)
 [![Last commit](https://img.shields.io/github/last-commit/AraneaDev/ariadne?label=last%20commit)](https://github.com/AraneaDev/ariadne/commits/main)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/)
-[![Project page](https://img.shields.io/badge/project%20page-aranea--development.nl-0b7285)](https://aranea-development.nl/en/tools/ariadne)
+[![Tool page](https://img.shields.io/badge/tool%20page-aranea--development.nl-0b7285)](https://aranea-development.nl/en/tools/ariadne)
 [![Status](https://img.shields.io/badge/status-pre--release-orange)](#install)
 
 </div>
