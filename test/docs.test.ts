@@ -20,8 +20,8 @@ describe('the slash command', () => {
 describe('the README', () => {
   const readme = read('README.md')
 
-  it('states the honest limits', () => {
-    expect(readme).toContain('Honest limits')
+  it('states its limits', () => {
+    expect(readme).toContain('## Limits')
     expect(readme).toContain('estimate')
   })
 

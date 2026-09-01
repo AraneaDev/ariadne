@@ -2,7 +2,7 @@
 
 # Ariadne
 
-**What your installed MCP servers actually cost you, in real sessions.**
+**What your installed MCP servers cost you, in real sessions.**
 
 [![Release](https://img.shields.io/github/v/release/AraneaDev/ariadne?label=release&include_prereleases)](https://github.com/AraneaDev/ariadne/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/AraneaDev/ariadne/ci.yml?label=CI)](https://github.com/AraneaDev/ariadne/actions/workflows/ci.yml)
@@ -15,8 +15,7 @@
 
 </div>
 
-Measures what your installed MCP servers actually cost you, after install, in
-real sessions.
+Per server, per session, from the traffic on your own machine.
 
 > **Ariadne** (Ἀριάδνη) gave Theseus the thread that let him walk back out of the
 > labyrinth at Knossos. The maze stayed exactly as complicated as it had been. What
@@ -49,7 +48,7 @@ The table is the boring half. The findings under it are the reason to run it,
 and each one names its evidence:
 
 - **paid for, never used.** Five servers were connected all session, four were
-  never called, and those four cost N tokens per turn regardless.
+  never called, and those four were paid for on every turn regardless.
 - **larger than advertised.** A tool describes itself in nine words and returns
   38 KB on average.
 - **configured, absent.** A server has failed to connect for six days. Its tools
@@ -75,8 +74,8 @@ disappears, the history goes and every other number stands.
 ## Install
 
 ```bash
-/plugin marketplace add AraneaDev/ariadne
-/plugin install ariadne
+claude plugin marketplace add https://aranea-development.nl/plugins/marketplace.json
+claude plugin install ariadne@aranea
 ```
 
 The first session after install builds the hook binary in the background and
@@ -119,8 +118,6 @@ ariadne purge                # delete the ledger
   enumerated would copy them somewhere they are not guarded.
 - It does not send anything anywhere. There is no network code beyond the
   prober's connections to your own configured servers, and no export format.
-- It does not grade a server. It measures. A grade from one machine's traffic
-  would be a number pretending to be a judgement.
 - It does not add anything to your context window unless you asked for a report.
   A tool whose subject is the cost of things sitting in your context has no
   business sitting in it. The one exception is the first session after install,
@@ -135,13 +132,13 @@ not, because a server that templates its own configuration into its tool text
 could otherwise write a path or a URL straight into the ledger through a field
 no finding needs to read.
 
-## Honest limits
+## Limits
 
 Token counts are estimates. Bytes are exact, and the byte figure is printed
 beside every token figure.
 
 A tool called once is not a measurement. Every finding declares a minimum sample
-and stays silent below it, so you will never see a p95 over four calls.
+and stays silent below it, so no p95 appears until a tool has been called five times.
 
 Attribution of window pressure is approximate. Ariadne knows what a server
 returned, not what the model then did with it, and a large result summarised
