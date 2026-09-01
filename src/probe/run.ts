@@ -1,8 +1,21 @@
 import { appendConn, writeProbes } from '../ledger'
 import { projectSlug } from '../paths'
-import type { ConnEvent, ProbeEvent } from '../types'
+import type { ConnEvent, ProbeEvent, ProbeFailure, Transport } from '../types'
 import { parseRoster, resolveSpawn } from './roster'
 import { probeStdio } from './stdio'
+
+/**
+ * Whether a roster entry can be probed at all, and if not, why.
+ *
+ * Only a stdio server can be measured: the prober speaks stdio only. An HTTP or
+ * SSE server is `remote-unmeasured` regardless of whether it happens to use
+ * OAuth, because the prober has no way to tell and no business asserting it.
+ * @param transport The entry's transport.
+ * @returns The reason it cannot be probed, or null when it can.
+ */
+export function unprobeableReason(transport: Transport): ProbeFailure | null {
+  return transport === 'stdio' ? null : 'remote-unmeasured'
+}
 
 /** Budget for the roster call. `claude mcp list` health-checks, so it is not instant. */
 const ROSTER_TIMEOUT_MS = 30_000
@@ -54,9 +67,9 @@ export async function runProbes(cwd: string, sessionId: string): Promise<void> {
 
     const shared = { ...base, t: 'probe' as const, source: 'probe' as const, server: entry.server, transport: entry.transport }
 
-    if (entry.transport !== 'stdio') {
-      // A remote is reached with credentials Ariadne does not hold and will not read.
-      probes.push({ ...shared, ok: false, connect_ms: null, tool_count: 0, defs_bytes: 0, tools: [], reason: 'oauth-unreachable' })
+    const unprobeable = unprobeableReason(entry.transport)
+    if (unprobeable) {
+      probes.push({ ...shared, ok: false, connect_ms: null, tool_count: 0, defs_bytes: 0, tools: [], reason: unprobeable })
       continue
     }
 
@@ -78,9 +91,37 @@ export async function runProbes(cwd: string, sessionId: string): Promise<void> {
   writeProbes(sessionId, probes)
 }
 
+/**
+ * The project directory a session-start probe should measure.
+ *
+ * `session-start.sh` runs this file after `cd`-ing into the plugin's own
+ * directory, so `process.cwd()` there names the plugin cache, not the project.
+ * Claude Code exports `CLAUDE_PROJECT_DIR` for exactly this, and the script
+ * passes it through; `process.cwd()` is only the fallback for a shell that
+ * invoked this file some other way.
+ * @param env The process environment.
+ * @returns The directory to probe.
+ */
+export function probeCwd(env: NodeJS.ProcessEnv): string {
+  return env.CLAUDE_PROJECT_DIR || process.cwd()
+}
+
+/**
+ * The session id a session-start probe should be filed under.
+ *
+ * Claude Code exports `CLAUDE_CODE_SESSION_ID`, not `CLAUDE_SESSION_ID`. A probe
+ * filed under a session id no report will ever ask for is a probe that never
+ * shows up in one.
+ * @param env The process environment.
+ * @returns The session id to record probes under.
+ */
+export function probeSessionId(env: NodeJS.ProcessEnv): string {
+  return env.CLAUDE_CODE_SESSION_ID || `probe-${Date.now()}`
+}
+
 if (import.meta.main) {
   try {
-    await runProbes(process.cwd(), process.env.CLAUDE_SESSION_ID ?? `probe-${Date.now()}`)
+    await runProbes(probeCwd(process.env), probeSessionId(process.env))
   } catch {
     // A failed probe costs a standing-cost figure and nothing else.
   }

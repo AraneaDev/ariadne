@@ -62,7 +62,7 @@ describe('writeProbes', () => {
       project: 'ariadne-aaaaaaaa', source: 'probe',
       server: 'knossos', transport: 'stdio', ok: true, connect_ms: 405,
       tool_count: 1, defs_bytes: 1117,
-      tools: [{ name: 'scan_project', desc: 'Scan a project', desc_bytes: 14, schema_bytes: 903, schema_hash: 'a1b2c3d4e5f60718' }],
+      tools: [{ name: 'scan_project', desc_bytes: 14, schema_bytes: 903, schema_hash: 'a1b2c3d4e5f60718' }],
     }
     writeProbes('s1', [probe])
     expect(readProbes()).toEqual([probe])
@@ -74,7 +74,7 @@ describe('writeProbes', () => {
       project: 'ariadne-aaaaaaaa', source: 'probe',
       server: 'knossos', transport: 'stdio', ok: true, connect_ms: 405,
       tool_count: 1, defs_bytes: 1117,
-      tools: [{ name: 'scan_project', desc: 'Scan a project', desc_bytes: 14, schema_bytes: 903, schema_hash: 'a1b2c3d4e5f60718' }],
+      tools: [{ name: 'scan_project', desc_bytes: 14, schema_bytes: 903, schema_hash: 'a1b2c3d4e5f60718' }],
     }
     writeProbes('../escape', [probe])
     const dir = join(process.env.ARIADNE_HOME as string, 'probes')

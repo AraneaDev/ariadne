@@ -36,17 +36,29 @@ export interface CallEvent extends BaseEvent {
   id: string
 }
 
-/** One tool as the server declared it. Descriptions are public interface, not user data. */
+/**
+ * One tool as the server declared it. Names and schema shapes are public
+ * interface, not user data. The description's byte length is kept for the same
+ * reason; the description text itself is not, because nothing downstream reads
+ * it and a server that templates its own configuration into its tool text could
+ * otherwise write a path or a URL straight into the ledger through it.
+ */
 export interface ToolShape {
   name: string
-  desc: string
   desc_bytes: number
   schema_bytes: number
   schema_hash: string
 }
 
-/** Why a server could not be measured. */
-export type ProbeFailure = 'oauth-unreachable' | 'config-unresolved' | 'timeout' | 'handshake-failed'
+/**
+ * Why a server could not be measured.
+ *
+ * `oauth-unreachable` is kept only so an old ledger entry still parses; nothing
+ * writes it any more. A non-stdio transport is `remote-unmeasured`, because the
+ * prober does not know whether the server even uses OAuth, only that it does not
+ * speak stdio.
+ */
+export type ProbeFailure = 'oauth-unreachable' | 'remote-unmeasured' | 'config-unresolved' | 'timeout' | 'handshake-failed'
 
 /** One `tools/list` measurement, or a recorded reason there is none. */
 export interface ProbeEvent extends BaseEvent {

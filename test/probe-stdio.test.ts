@@ -12,11 +12,18 @@ describe('shapeTools', () => {
     ])
     expect(tools).toHaveLength(1)
     expect(tools[0]?.name).toBe('alpha')
-    expect(tools[0]?.desc).toBe('Does the alpha thing')
     expect(tools[0]?.desc_bytes).toBe(20)
     expect(tools[0]?.schema_bytes).toBeGreaterThan(0)
     expect(tools[0]?.schema_hash).toMatch(/^[0-9a-f]{16}$/)
     expect(defs_bytes).toBeGreaterThan(tools[0]!.schema_bytes)
+  })
+
+  it('keeps the description length but never the description text itself', () => {
+    const { tools } = shapeTools([
+      { name: 'alpha', description: 'Does the alpha thing', inputSchema: { type: 'object' } },
+    ])
+    expect(tools[0]).not.toHaveProperty('desc')
+    expect(JSON.stringify(tools)).not.toContain('Does the alpha thing')
   })
 
   it('gives identical schemas an identical hash regardless of key order', () => {

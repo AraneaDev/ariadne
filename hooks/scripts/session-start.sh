@@ -28,6 +28,12 @@ fi
 
 # Measure standing cost out of band. Detached and silent: it must never delay a
 # session, and it has nothing to say to the model.
-( cd "$root" && bun run src/probe/run.ts >/dev/null 2>&1 ) &
+#
+# The prober's own cwd becomes the plugin's directory below, so the project it
+# should measure has to travel some other way. CLAUDE_PROJECT_DIR is already in
+# this script's environment; carry it into the subshell explicitly rather than
+# counting on it surviving the `cd` by accident.
+project=${CLAUDE_PROJECT_DIR:-}
+( cd "$root" && CLAUDE_PROJECT_DIR="$project" bun run src/probe/run.ts >/dev/null 2>&1 ) &
 
 exit 0

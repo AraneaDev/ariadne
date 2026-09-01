@@ -40,10 +40,12 @@ function canonical(value: unknown): string {
 /**
  * Measure a `tools/list` payload.
  *
- * Names, descriptions and schema hashes are kept: they are the server's published
- * interface, and both "larger than advertised" and "twice over" need them. The
- * schema itself is hashed rather than stored, because its size is what matters and
- * a copy of every schema on disk buys nothing.
+ * Names and schema hashes are kept: they are the server's published interface,
+ * and both "larger than advertised" and "twice over" need them. The schema
+ * itself is hashed rather than stored, because its size is what matters and a
+ * copy of every schema on disk buys nothing. The description is measured and
+ * discarded the same way: `desc_bytes` is what "larger than advertised" uses,
+ * and nothing reads the text.
  * @param tools The `tools` array from a `tools/list` result.
  * @returns The per-tool shapes and the total bytes injected per request.
  */
@@ -59,7 +61,6 @@ export function shapeTools(tools: unknown): { tools: ToolShape[]; defs_bytes: nu
     const schema = canonical(t.inputSchema ?? {})
     shapes.push({
       name,
-      desc,
       desc_bytes: Buffer.byteLength(desc, 'utf8'),
       schema_bytes: Buffer.byteLength(schema, 'utf8'),
       schema_hash: createHash('sha256').update(schema).digest('hex').slice(0, 16),
