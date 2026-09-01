@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { mkdtempSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { dayFile, paths, projectSlug, safeSegment } from '../src/paths'
+import { dataRoot, dayFile, paths, projectSlug, safeSegment } from '../src/paths'
 
 describe('safeSegment', () => {
   it('strips path separators', () => {
@@ -27,6 +27,19 @@ describe('projectSlug', () => {
     expect(a).not.toBe(projectSlug('/root/cassandra'))
     expect(a).toMatch(/^[a-zA-Z0-9._-]+-[0-9a-f]{8}$/)
   })
+
+  it('resolves a symlink to the same project as the real path it points at', () => {
+    const real = mkdtempSync(join(tmpdir(), 'ariadne-repo-'))
+    mkdirSync(join(real, '.git'))
+    const link = join(tmpdir(), `ariadne-link-${process.pid}-${Date.now()}`)
+    symlinkSync(real, link)
+    try {
+      expect(projectSlug(link)).toBe(projectSlug(real))
+    } finally {
+      rmSync(link, { force: true })
+      rmSync(real, { recursive: true, force: true })
+    }
+  })
 })
 
 describe('paths', () => {
@@ -39,6 +52,47 @@ describe('paths', () => {
     expect(p.probes).toBe(join(home, 'probes'))
     expect(p.conns).toBe(join(home, 'conns'))
     delete process.env.ARIADNE_HOME
+  })
+})
+
+describe('dataRoot', () => {
+  const originalHome = process.env.HOME
+  const originalPluginData = process.env.CLAUDE_PLUGIN_DATA
+
+  it('never remembers an ARIADNE_HOME override in the real home directory', () => {
+    const fakeHome = mkdtempSync(join(tmpdir(), 'ariadne-fakehome-'))
+    const dataDir = mkdtempSync(join(tmpdir(), 'ariadne-data-'))
+    process.env.HOME = fakeHome
+    delete process.env.CLAUDE_PLUGIN_DATA
+    process.env.ARIADNE_HOME = dataDir
+    try {
+      expect(dataRoot()).toBe(dataDir)
+      expect(existsSync(join(fakeHome, '.ariadne', 'data-root'))).toBe(false)
+    } finally {
+      delete process.env.ARIADNE_HOME
+      if (originalHome === undefined) delete process.env.HOME
+      else process.env.HOME = originalHome
+      if (originalPluginData === undefined) delete process.env.CLAUDE_PLUGIN_DATA
+      else process.env.CLAUDE_PLUGIN_DATA = originalPluginData
+    }
+  })
+
+  it('still remembers CLAUDE_PLUGIN_DATA, which the hooks rely on for a bare CLI call', () => {
+    const fakeHome = mkdtempSync(join(tmpdir(), 'ariadne-fakehome-'))
+    const dataDir = mkdtempSync(join(tmpdir(), 'ariadne-plugindata-'))
+    process.env.HOME = fakeHome
+    delete process.env.ARIADNE_HOME
+    process.env.CLAUDE_PLUGIN_DATA = dataDir
+    try {
+      expect(dataRoot()).toBe(dataDir)
+      expect(existsSync(join(fakeHome, '.ariadne', 'data-root'))).toBe(true)
+    } finally {
+      delete process.env.CLAUDE_PLUGIN_DATA
+      if (originalHome === undefined) delete process.env.HOME
+      else process.env.HOME = originalHome
+      if (originalPluginData === undefined) delete process.env.CLAUDE_PLUGIN_DATA
+      else process.env.CLAUDE_PLUGIN_DATA = originalPluginData
+    }
   })
 })
 

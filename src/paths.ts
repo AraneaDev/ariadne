@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 
@@ -61,13 +61,23 @@ function readRememberedDataRoot(): string | null {
 
 /**
  * Where the ledger lives. Tests set `ARIADNE_HOME`; the plugin gets `CLAUDE_PLUGIN_DATA`.
+ *
+ * Only `CLAUDE_PLUGIN_DATA` is ever remembered. `ARIADNE_HOME` is a test and
+ * one-off override: it wins for the process that set it, exactly like before,
+ * but it must leave no trace for the next bare `ariadne` invocation to stumble
+ * into. Remembering it would mean one `ARIADNE_HOME=/tmp/x ariadne report` could
+ * silently redirect every later hook and every later bare command to `/tmp/x`,
+ * and losing that pointer when `/tmp` is cleared would look like losing the
+ * ledger.
  * @returns The absolute data root.
  */
 export function dataRoot(): string {
-  const explicit = process.env.ARIADNE_HOME ?? process.env.CLAUDE_PLUGIN_DATA
-  if (explicit) {
-    rememberDataRoot(explicit)
-    return explicit
+  const override = process.env.ARIADNE_HOME
+  if (override) return override
+  const pluginData = process.env.CLAUDE_PLUGIN_DATA
+  if (pluginData) {
+    rememberDataRoot(pluginData)
+    return pluginData
   }
   return readRememberedDataRoot() ?? join(homeBase(), '.ariadne')
 }
@@ -101,15 +111,28 @@ export function safeSegment(value: string, fallback = 'unknown'): string {
  *
  * Pure filesystem probes rather than `git rev-parse`, because this runs on the hook
  * path and a subprocess there would cost more than the lookup it serves.
+ *
+ * Resolved through `realpath` before the walk starts. `process.cwd()` already
+ * returns the real path, but a hook's `cwd` can arrive as `$PWD`, which keeps a
+ * symlink a shell followed to get there. Left un-resolved, a hook and a prober
+ * looking at the same project through different paths would hash two different
+ * project slugs for it.
  * @param cwd The directory to start from.
  * @returns The repository root, or `cwd` resolved.
  */
 export function findRepoRoot(cwd: string): string {
-  let dir = resolve(cwd)
+  const resolved = resolve(cwd)
+  let dir = resolved
+  try {
+    dir = realpathSync(resolved)
+  } catch {
+    // A path that does not exist yet has no symlink to resolve.
+  }
+  const start = dir
   for (;;) {
     if (existsSync(join(dir, '.git'))) return dir
     const parent = dirname(dir)
-    if (parent === dir) return resolve(cwd)
+    if (parent === dir) return start
     dir = parent
   }
 }
