@@ -24,8 +24,8 @@ real sessions.
 > leaves your MCP servers exactly as they are, and tells you what each one costs you
 > on every turn and which ones you never reach for.
 
-MCP Observatory grades a server before you install it. Ariadne measures the one
-you already run.
+[MCP Observatory](https://mcpobservatory.com/) grades a server before you install
+it. Ariadne measures the one you already run.
 
 ## What it measures
 
@@ -161,7 +161,9 @@ inside the plugin's own directory instead, so those rows say `unmeasured
 (config-unresolved)`. On the machine this was built on, that was three servers
 out of twelve.
 
-Per-call tool failure rate is not measured. The hooks record only successful tool calls, so the ledger captures when a server fails to connect but not when individual calls to that server fail.
+Per-call tool failure rate is not measured. The hooks record only successful tool
+calls, so the ledger captures when a server fails to connect but not when
+individual calls to that server fail.
 
 Duplicate detection matches on tool names and schema hashes. A near-copy under an
 unrelated name is not caught.
