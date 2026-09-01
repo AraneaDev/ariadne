@@ -24,8 +24,8 @@ real sessions.
 > leaves your MCP servers exactly as they are, and tells you what each one costs you
 > on every turn and which ones you never reach for.
 
-MCP Observatory grades a server before you install it. Ariadne measures the one
-you already run.
+[MCP Observatory](https://mcpobservatory.com/) grades a server before you install
+it. Ariadne measures the one you already run.
 
 ## What it measures
 
