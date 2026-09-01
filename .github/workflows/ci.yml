@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Bun ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun run test
+
+      - name: Lint docs
+        run: bun run lint:docs
+
+      # Ariadne ships as a Claude Code plugin, not a published npm package, so
+      # there is no `bun pm pack --dry-run` to run here. Instead, check the
+      # thing an install actually depends on: the plugin manifest parses, its
+      # version agrees with package.json (also asserted in
+      # test/scaffold.test.ts, so this is redundant on purpose, as a check
+      # that survives even if that test is ever skipped), and every hook
+      # command in hooks.json names a script that exists in the tree.
+      - name: Check the plugin manifest
+        if: runner.os == 'Linux'
+        run: |
+          set -eu
+          jq -e . .claude-plugin/plugin.json > /dev/null && echo "plugin.json ok"
+          jq -e . hooks/hooks.json > /dev/null && echo "hooks.json ok"
+
+          plugin_version=$(jq -r '.version' .claude-plugin/plugin.json)
+          package_version=$(jq -r '.version' package.json)
+          echo "plugin.json: $plugin_version   package.json: $package_version"
+          test "$plugin_version" = "$package_version"
+
+          status=0
+          while read -r script; do
+            path="${script#\$CLAUDE_PLUGIN_ROOT/}"
+            if [ -f "$path" ]; then
+              echo "ok      $path"
+            else
+              echo "MISSING $path"
+              status=1
+            fi
+          done < <(jq -r '.hooks[][].hooks[].command | scan("\\$CLAUDE_PLUGIN_ROOT/[^\"]+")' hooks/hooks.json)
+          exit $status
