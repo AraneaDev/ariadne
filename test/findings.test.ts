@@ -37,7 +37,6 @@ describe('paid for, never used', () => {
    *
    * Built-in calls on purpose: a session spent in Read still proves the hooks were
    * running and that no MCP server was reached.
-   *
    * @param count How many calls to produce.
    * @param sessions How many distinct sessions to spread them over.
    * @returns Built-in call events.

@@ -188,6 +188,7 @@ export function serverKey(name: string): string {
  * The first finding people install for. It names what the server costs per request
  * whether or not you reach for it.
  * @param slice The ledger slice.
+ * @param observed How much traffic the ledger has actually watched.
  * @returns At most one finding.
  */
 function paidForNeverUsed(slice: LedgerSlice, observed: Observation): Finding[] {
