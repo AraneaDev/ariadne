@@ -140,6 +140,8 @@ inside the plugin's own directory instead, so those rows say `unmeasured
 (config-unresolved)`. On the machine this was built on, that was three servers
 out of twelve.
 
+Per-call tool failure rate is not measured. The hooks record only successful tool calls, so the ledger captures when a server fails to connect but not when individual calls to that server fail.
+
 Duplicate detection matches on tool names and schema hashes. A near-copy under an
 unrelated name is not caught.
 
