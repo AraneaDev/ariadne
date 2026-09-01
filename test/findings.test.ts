@@ -32,24 +32,70 @@ describe('estimateTokens', () => {
 })
 
 describe('paid for, never used', () => {
-  it('fires for a probed server with no calls', () => {
+  /**
+   * Enough watched traffic for "never called" to mean something.
+   *
+   * Built-in calls on purpose: a session spent in Read still proves the hooks were
+   * running and that no MCP server was reached.
+   *
+   * @param count How many calls to produce.
+   * @param sessions How many distinct sessions to spread them over.
+   * @returns Built-in call events.
+   */
+  const watched = (count = 27, sessions = 3): CallEvent[] =>
+    Array.from({ length: count }, (_, i) => ({
+      ...call('x', 'Read', 100, `s${i % sessions}`),
+      server: null,
+      builtin: true,
+    }))
+
+  it('fires for a probed server with no calls, once enough has been watched', () => {
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])], calls: watched() }))
+    expect(f.map((x) => x.id)).toContain('paid-for-never-used')
+  })
+
+  it('stays silent on a ledger that has watched nothing', () => {
     const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])] }))
+    expect(f.map((x) => x.id)).not.toContain('paid-for-never-used')
+  })
+
+  it('stays silent below the observed-sessions floor', () => {
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])], calls: watched(40, 2) }))
+    expect(f.map((x) => x.id)).not.toContain('paid-for-never-used')
+  })
+
+  it('stays silent below the observed-calls floor', () => {
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])], calls: watched(24, 3) }))
+    expect(f.map((x) => x.id)).not.toContain('paid-for-never-used')
+  })
+
+  it('counts built-in calls towards the floor, since they prove the hooks ran', () => {
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])], calls: watched(25, 3) }))
     expect(f.map((x) => x.id)).toContain('paid-for-never-used')
   })
 
   it('stays silent when the server was called', () => {
-    const f = findings(slice({ probes: [probe('used', [{ name: 'a' }])], calls: [call('used', 'a')] }))
+    const f = findings(slice({
+      probes: [probe('used', [{ name: 'a' }])],
+      calls: [...watched(), call('used', 'a')],
+    }))
     expect(f.map((x) => x.id)).not.toContain('paid-for-never-used')
   })
 
   it('names the standing cost in its evidence', () => {
-    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }], 12345)] }))
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }], 12345)], calls: watched() }))
     expect(f.find((x) => x.id === 'paid-for-never-used')?.evidence.join(' ')).toContain('12,345 bytes')
+  })
+
+  it('says how much was watched, so the claim carries its own basis', () => {
+    const f = findings(slice({ probes: [probe('idle', [{ name: 'a' }])], calls: watched(30, 3) }))
+    expect(f.find((x) => x.id === 'paid-for-never-used')?.evidence.join(' '))
+      .toContain('Observed across 3 sessions and 30 tool calls.')
   })
 
   it('treats one server spelled three ways as one server', () => {
     const probes = [probe('claude.ai Gmail', [{ name: 'send' }])]
-    const calls = [{ ...call('claude_ai_Gmail', 'send') }]
+    const calls = [...watched(), { ...call('claude_ai_Gmail', 'send') }]
     expect(findings(slice({ probes, calls })).map((x) => x.id)).not.toContain('paid-for-never-used')
   })
 })

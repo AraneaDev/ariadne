@@ -17,6 +17,12 @@ export type FindingId =
   | 'twice-over'
   | 'low-reach'
 
+/** How much traffic the ledger has actually seen, counted over every tool call. */
+interface Observation {
+  sessions: number
+  calls: number
+}
+
 /** One thing worth telling you, with what it rests on. */
 export interface Finding {
   id: FindingId
@@ -48,6 +54,18 @@ const WIDE_SERVER_TOOLS = 10
 const LOW_REACH_TOOLS = 2
 /** Minimum sessions before reach is a pattern rather than a quiet week. */
 const MIN_REACH_SESSIONS = 3
+/**
+ * How much traffic must be observed before "never called" means anything.
+ *
+ * Without a floor here the rule fires on a ledger holding no calls at all, which
+ * is what a fresh install looks like right after a backfill and a probe. It would
+ * then tell you to cut every server it just measured, on the evidence that it has
+ * watched nothing. Both counts come from every tool call, built-ins included: a
+ * session spent in Read and Bash still proves the hooks were running and that you
+ * did not reach for the server.
+ */
+const MIN_OBSERVED_SESSIONS = 3
+const MIN_OBSERVED_CALLS = 25
 
 /**
  * Estimated tokens for a byte count.
@@ -172,7 +190,12 @@ export function serverKey(name: string): string {
  * @param slice The ledger slice.
  * @returns At most one finding.
  */
-function paidForNeverUsed(slice: LedgerSlice): Finding[] {
+function paidForNeverUsed(slice: LedgerSlice, observed: Observation): Finding[] {
+  // "Never called" is a claim about what was watched, so it needs watching to have
+  // happened. Below the floor the rule says nothing rather than reporting every
+  // server it has just measured as unused.
+  if (observed.sessions < MIN_OBSERVED_SESSIONS || observed.calls < MIN_OBSERVED_CALLS) return []
+
   const called = new Set(slice.calls.filter((c) => c.server !== null).map((c) => serverKey(c.server as string)))
   const idle = [...latestProbes(slice.probes).values()]
     .filter((p) => p.ok && p.tool_count > 0 && !called.has(serverKey(p.server)))
@@ -187,6 +210,7 @@ function paidForNeverUsed(slice: LedgerSlice): Finding[] {
     evidence: [
       ...idle.map((p) => `${p.server}: ${p.tool_count} tools, ${n(p.defs_bytes)} bytes (~${n(estimateTokens(p.defs_bytes))} estimated tokens) injected per request`),
       `Together they cost ${n(total)} bytes (~${n(estimateTokens(total))} estimated tokens) on every turn, whether or not you reach for them.`,
+      `Observed across ${n(observed.sessions)} sessions and ${n(observed.calls)} tool calls.`,
     ],
     derivedFrom: ['probe', 'hook'],
   }]
@@ -364,8 +388,14 @@ function lowReach(slice: LedgerSlice): Finding[] {
  */
 export function findings(slice: LedgerSlice): Finding[] {
   const mcpOnly: LedgerSlice = { ...slice, calls: slice.calls.filter((c) => !c.builtin) }
+  // Counted before built-ins are filtered out, because a session spent entirely in
+  // Read and Bash is still a session in which no MCP server was reached.
+  const observed: Observation = {
+    sessions: new Set(slice.calls.map((c) => c.session)).size,
+    calls: slice.calls.length,
+  }
   return [
-    ...paidForNeverUsed(mcpOnly),
+    ...paidForNeverUsed(mcpOnly, observed),
     ...largerThanAdvertised(mcpOnly),
     ...configuredAbsent(mcpOnly),
     ...twiceOver(mcpOnly),
