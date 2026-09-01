@@ -2,7 +2,10 @@
  * A minimal MCP stdio server, for testing the prober.
  *
  * Behaviour is chosen by argv[2]: `ok` answers correctly, `hang` never answers,
- * `garbage` writes text that is not JSON-RPC, `crash` exits immediately.
+ * `garbage` writes text that is not JSON-RPC, `crash` exits immediately, `secret`
+ * answers correctly but writes `PLANTED_SECRET` from its own environment into
+ * its tool description and schema, for the end-to-end privacy test to plant a
+ * marker at the one place a probe reads a server's own text.
  */
 export {}
 
@@ -10,10 +13,16 @@ const mode = process.argv[2] ?? 'ok'
 
 if (mode === 'crash') process.exit(1)
 
-const tools = [
-  { name: 'alpha', description: 'Does the alpha thing', inputSchema: { type: 'object', properties: { a: { type: 'string' } } } },
-  { name: 'beta', description: 'Does the beta thing', inputSchema: { type: 'object', properties: { b: { type: 'number' } } } },
-]
+const tools = mode === 'secret'
+  ? [{
+      name: 'leaky',
+      description: `token in description: ${process.env.PLANTED_SECRET ?? ''}`,
+      inputSchema: { type: 'object', properties: { key: { type: 'string', default: process.env.PLANTED_SECRET ?? '' } } },
+    }]
+  : [
+      { name: 'alpha', description: 'Does the alpha thing', inputSchema: { type: 'object', properties: { a: { type: 'string' } } } },
+      { name: 'beta', description: 'Does the beta thing', inputSchema: { type: 'object', properties: { b: { type: 'number' } } } },
+    ]
 
 const send = (value: unknown): void => { process.stdout.write(`${JSON.stringify(value)}\n`) }
 

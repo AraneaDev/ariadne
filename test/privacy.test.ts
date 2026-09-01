@@ -1,6 +1,13 @@
-import { describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { byteLength, errorClass, splitToolName } from '../src/measure'
 import { callEventFrom } from '../src/events'
+import { appendCall, appendConn, writeProbes } from '../src/ledger'
+import { paths } from '../src/paths'
+import { parseRoster } from '../src/probe/roster'
+import { probeStdio } from '../src/probe/stdio'
 import type { HookPayload } from '../src/types'
 
 const SECRET = 'ctx7sk-13a43143-43d8-4026-a16a-ce7a1bc7c027'
@@ -121,5 +128,73 @@ describe('callEventFrom', () => {
 
   it('refuses a payload with no tool name', () => {
     expect(callEventFrom({ ...payload, tool_name: undefined }, 1)).toBeNull()
+  })
+})
+
+describe('privacy end to end: the ledger written to disk', () => {
+  const LEDGER_SECRET = 'ctx7sk-e2e-a1b2c3d4-9f8e-7d6c-5b4a-3c2d1e0f9a8b'
+
+  beforeEach(() => {
+    process.env.ARIADNE_HOME = mkdtempSync(join(tmpdir(), 'ariadne-'))
+  })
+
+  /**
+   * Every byte written under the data root, across every ledger file.
+   * @returns The concatenated raw file contents.
+   */
+  function rawLedgerBytes(): string {
+    let out = ''
+    for (const dir of [paths().calls, paths().conns, paths().probes]) {
+      if (!existsSync(dir)) continue
+      for (const name of readdirSync(dir)) out += readFileSync(join(dir, name), 'utf8')
+    }
+    return out
+  }
+
+  it('never writes a planted secret to disk, through the call, probe or conn writer', async () => {
+    // The hook path: a secret in the tool's arguments, its result and its error text.
+    const call = callEventFrom({
+      hook_event_name: 'PostToolUse',
+      session_id: 'e2e-session',
+      cwd: '/root/ariadne',
+      tool_name: 'mcp__leaky__do_thing',
+      tool_input: { token: LEDGER_SECRET },
+      tool_response: { body: `here is your result, secretly: ${LEDGER_SECRET}` },
+      tool_use_id: 'toolu_e2e',
+      error: `boom ${LEDGER_SECRET}`,
+    }, 42)
+    expect(call).not.toBeNull()
+    if (call) appendCall(call)
+
+    // The backfill/probe path: a secret in the command column `claude mcp list`
+    // prints, parsed by the real roster parser before it ever reaches a ConnEvent.
+    const rosterLine = `argos: node /root/sql-ts/index.js --token=${LEDGER_SECRET} - ✘ Failed to connect — CONNECTION_CLOSED: ${LEDGER_SECRET}`
+    const [entry] = parseRoster(rosterLine)
+    expect(entry).toBeDefined()
+    appendConn({
+      v: 1, t: 'conn', ts: new Date().toISOString(), session: 'e2e-session', project: 'p', source: 'probe',
+      server: entry!.server, transport: entry!.transport, ok: entry!.connected, err: entry!.err,
+    })
+
+    // The probe path: a secret in the spawned server's own environment and argv,
+    // which the fake server writes into its tool description and schema default,
+    // the one place a real hostile server could try to smuggle out its own config.
+    const fake = join(import.meta.dir, 'fixtures', 'fake-server.ts')
+    const probed = await probeStdio({
+      command: process.execPath,
+      args: ['run', fake, 'secret', `--token=${LEDGER_SECRET}`],
+      env: { PLANTED_SECRET: LEDGER_SECRET },
+    })
+    expect(probed.ok).toBe(true)
+    expect(probed.tools.length).toBeGreaterThan(0)
+    writeProbes('e2e-session', [{
+      v: 1, t: 'probe', ts: new Date().toISOString(), session: 'e2e-session', project: 'p', source: 'probe',
+      server: 'leaky', transport: 'stdio', ok: probed.ok, connect_ms: probed.connect_ms,
+      tool_count: probed.tool_count, defs_bytes: probed.defs_bytes, tools: probed.tools,
+    }])
+
+    const onDisk = rawLedgerBytes()
+    expect(onDisk.length).toBeGreaterThan(0)
+    expect(onDisk).not.toContain(LEDGER_SECRET)
   })
 })
