@@ -34,14 +34,16 @@ export function sliceFor(opts: { session?: string; project?: string } = {}): Led
  * @param probe The latest probe for the server, if any.
  * @param server The server's display name.
  * @param calls Every call to that server.
+ * @param totalOut Bytes returned by every MCP call in the slice, for the share row.
  * @returns The rendered line.
  */
-function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEvent[]): string {
+function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEvent[], totalOut: number): string {
   const reached = new Set(calls.map((c) => c.tool)).size
   const failures = calls.filter((c) => !c.ok).length
   const out = calls.reduce((sum, c) => sum + c.out_bytes, 0)
   const latencies = calls.map((c) => c.ms).filter((m): m is number => m !== null).sort((a, b) => a - b)
   const p50 = latencies.length >= 5 ? `${latencies[Math.floor(latencies.length / 2)]}ms` : '-'
+  const p95 = latencies.length >= 5 ? `${latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * 0.95))]}ms` : '-'
 
   const standing = probe === undefined
     ? 'not probed'
@@ -51,13 +53,22 @@ function serverRow(probe: ProbeEvent | undefined, server: string, calls: CallEve
 
   const reach = probe?.ok ? `${reached}/${probe.tool_count}` : `${reached}/?`
 
+  const biggest = calls.reduce<CallEvent | null>((best, c) => (best === null || c.out_bytes > best.out_bytes ? c : best), null)
+  const largest = biggest ? `${n(biggest.out_bytes)} bytes, from ${biggest.tool}` : '-'
+  const errors = calls.length === 0 ? '-' : `${n(failures)} of ${n(calls.length)} (${Math.round((failures / calls.length) * 100)}%)`
+  const share = totalOut > 0 ? `${((out / totalOut) * 100).toFixed(1)}% of bytes returned` : '-'
+
   return [
     `  ${server}`,
     `    standing cost   ${standing}`,
     `    reach           ${reach} tools`,
-    `    calls           ${n(calls.length)}${failures ? `, ${n(failures)} failed` : ''}`,
+    `    calls           ${n(calls.length)}`,
+    `    errors          ${errors}`,
     `    returned        ${n(out)} bytes (~${n(estimateTokens(out))} estimated tokens)`,
+    `    largest         ${largest}`,
+    `    share           ${share}`,
     `    latency p50     ${p50}`,
+    `    latency p95     ${p95}`,
   ].join('\n')
 }
 
@@ -101,12 +112,13 @@ export function renderReport(slice: LedgerSlice): string {
   }
 
   const servers = new Set<string>([...latest.keys(), ...mcpCalls.map((c) => serverKey(c.server as string))])
+  const totalOut = mcpCalls.reduce((sum, c) => sum + c.out_bytes, 0)
 
   const lines: string[] = ['ariadne', '']
   for (const key of [...servers].sort((a, b) => (displayName.get(a) ?? a).localeCompare(displayName.get(b) ?? b))) {
     const server = displayName.get(key) ?? key
     const calls = mcpCalls.filter((c) => serverKey(c.server as string) === key)
-    lines.push(serverRow(latest.get(key), server, calls), '')
+    lines.push(serverRow(latest.get(key), server, calls, totalOut), '')
   }
 
   const builtins = slice.calls.filter((c) => c.builtin)

@@ -58,6 +58,16 @@ describe('renderReport', () => {
     expect(renderReport({ calls: [], probes: [], conns: [] })).toContain('No measurements yet')
   })
 
+  it('prints every axis the readme promises', () => {
+    for (const row of ['standing cost', 'reach', 'calls', 'errors', 'returned', 'largest', 'share', 'latency p50', 'latency p95']) {
+      expect(out).toContain(row)
+    }
+  })
+
+  it('prints a dash rather than a percentile below the sample floor', () => {
+    expect(out).toContain('latency p95     -')
+  })
+
   it('prints one row for a server the sources spell differently', () => {
     const mixed: LedgerSlice = {
       probes: [{ ...(slice.probes[0] as ProbeEvent), server: 'claude.ai Gmail' }],

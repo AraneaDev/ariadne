@@ -90,10 +90,10 @@ ariadne purge                # delete the ledger
 
 - It does not disable a server or edit a config. Cutting a server is your
   decision.
-- It does not record tool arguments. It records their size.
-- It does not record tool results. It records their size. What came back is
-  usually the most sensitive thing in a session, and a monitor that logs payloads
-  is a second copy of your data in a place nobody is guarding.
+- It records the size of tool arguments, never the arguments themselves.
+- It records the size of tool results, never the results themselves. What came
+  back is usually the most sensitive thing in a session, and a monitor that logs
+  payloads is a second copy of your data in a place nobody is guarding.
 - It does not record server command lines, environments or URLs. `claude mcp
   list` prints API keys in its command column, and anything that logged what it
   enumerated would copy them somewhere they are not guarded.

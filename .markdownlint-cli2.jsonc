@@ -1,4 +1,5 @@
 {
-  "globs": ["README.md"],
-  "config": { "MD013": false, "MD033": false }
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", ".superpowers/**", "IDEA.md"],
+  "config": { "MD013": false, "MD033": false, "MD041": false }
 }
