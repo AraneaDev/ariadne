@@ -10,12 +10,19 @@
 [![Language](https://img.shields.io/github/languages/top/AraneaDev/ariadne)](https://github.com/AraneaDev/ariadne)
 [![Last commit](https://img.shields.io/github/last-commit/AraneaDev/ariadne?label=last%20commit)](https://github.com/AraneaDev/ariadne/commits/main)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/)
+[![Project page](https://img.shields.io/badge/project%20page-aranea--development.nl-0b7285)](https://aranea-development.nl/en/tools/ariadne)
 [![Status](https://img.shields.io/badge/status-pre--release-orange)](#install)
 
 </div>
 
 Measures what your installed MCP servers actually cost you, after install, in
 real sessions.
+
+> **Ariadne** (Ἀριάδνη) gave Theseus the thread that let him walk back out of the
+> labyrinth at Knossos. The maze stayed exactly as complicated as it had been. What
+> the thread changed is that he could tell where he had already walked. This tool
+> leaves your MCP servers exactly as they are, and tells you what each one costs you
+> on every turn and which ones you never reach for.
 
 MCP Observatory grades a server before you install it. Ariadne measures the one
 you already run.
@@ -159,6 +166,12 @@ Per-call tool failure rate is not measured. The hooks record only successful too
 Duplicate detection matches on tool names and schema hashes. A near-copy under an
 unrelated name is not caught.
 
-## Licence
+## License
 
-MIT.
+Ariadne is available under the [MIT license](LICENSE).
+
+---
+
+Built by [Aranea Development](https://aranea-development.nl). The thread is the whole
+myth: Theseus walks out of the labyrinth because someone kept a record of where he
+had been.
