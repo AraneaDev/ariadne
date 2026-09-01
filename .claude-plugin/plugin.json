@@ -1,11 +1,20 @@
 {
   "name": "ariadne",
   "displayName": "Ariadne",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Measures what your installed MCP servers actually cost you, after install, in real sessions.",
-  "author": { "name": "AraneaDev", "url": "https://github.com/AraneaDev" },
+  "author": {
+    "name": "AraneaDev",
+    "url": "https://github.com/AraneaDev"
+  },
   "homepage": "https://github.com/AraneaDev/ariadne",
   "repository": "https://github.com/AraneaDev/ariadne",
   "license": "MIT",
-  "keywords": ["mcp", "observability", "context", "tokens", "hooks"]
+  "keywords": [
+    "mcp",
+    "observability",
+    "context",
+    "tokens",
+    "hooks"
+  ]
 }
