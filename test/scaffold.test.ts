@@ -48,7 +48,11 @@ describe('session-start.sh', () => {
     expect(sh).not.toContain('exit 1')
   })
 
-  it('drains stdin so the caller never blocks', () => {
-    expect(sh).toContain('cat >/dev/null')
+  it('drains stdin before any early exit', () => {
+    const drain = sh.indexOf('cat >/dev/null')
+    const firstExit = sh.indexOf('exit 0')
+    expect(drain).toBeGreaterThan(-1)
+    expect(firstExit).toBeGreaterThan(-1)
+    expect(drain).toBeLessThan(firstExit)
   })
 })

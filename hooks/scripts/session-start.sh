@@ -2,15 +2,17 @@
 # Build ladder, then the prober.
 #
 # The hot path is a compiled binary that is gitignored because it is large, so the
-# first session after install builds it. Every rung ends in exit 0, because a
-# plugin that cannot start must still not stop a session from starting.
+# first session after install builds it. Every rung always exits successfully, because
+# a plugin that cannot start must still not stop a session from starting.
 set -u
+
+# Drain stdin first, so the caller never blocks on a full pipe. This has to come
+# before every early exit, including the one below, because a path that exits
+# without reading hands the writer a broken pipe.
+cat >/dev/null 2>&1
 
 root=${CLAUDE_PLUGIN_ROOT:-}
 [ -n "$root" ] || exit 0
-
-# Drain stdin so the caller never blocks on a full pipe.
-cat >/dev/null 2>&1
 
 if ! command -v bun >/dev/null 2>&1; then
   printf '%s\n' '{"systemMessage":"ariadne is inert: bun was not found on PATH. Install bun and restart the session."}'
