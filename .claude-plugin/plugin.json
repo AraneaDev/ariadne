@@ -1,7 +1,7 @@
 {
   "name": "ariadne",
   "displayName": "Ariadne",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Measures what your installed MCP servers actually cost you, after install, in real sessions.",
   "author": {
     "name": "AraneaDev",
