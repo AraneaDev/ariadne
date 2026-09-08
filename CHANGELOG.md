@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.6](https://github.com/AraneaDev/ariadne/compare/v0.0.5...v0.0.6) (2026-09-08)
+
+
+### Tests
+
+* **ledger:** stop pinning the corrupt-line test to one date ([#10](https://github.com/AraneaDev/ariadne/issues/10)) ([2ba0830](https://github.com/AraneaDev/ariadne/commit/2ba0830465858e232c63aab2ead88ede387e06f6))
+
+
+### Continuous integration
+
+* cancel superseded runs and give every job a timeout ([#9](https://github.com/AraneaDev/ariadne/issues/9)) ([34af698](https://github.com/AraneaDev/ariadne/commit/34af6986a4cd66b2cfdce494b778b157f6050654))
+
 ## [0.0.5](https://github.com/AraneaDev/ariadne/compare/v0.0.4...v0.0.5) (2026-09-01)
 
 
