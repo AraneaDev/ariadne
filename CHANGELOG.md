@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/AraneaDev/ariadne/compare/v0.0.6...v0.0.7) (2026-09-08)
+
+
+### Continuous integration
+
+* stop cancelling runs outside pull requests ([#12](https://github.com/AraneaDev/ariadne/issues/12)) ([2d3fe2b](https://github.com/AraneaDev/ariadne/commit/2d3fe2b6f3416535e65a8370abe2aee41e5a8ac7))
+
 ## [0.0.6](https://github.com/AraneaDev/ariadne/compare/v0.0.5...v0.0.6) (2026-09-08)
 
 
