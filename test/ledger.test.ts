@@ -43,8 +43,12 @@ describe('readCalls', () => {
 
   it('skips a corrupt line rather than failing the read', async () => {
     appendCall(call)
-    const file = join(process.env.ARIADNE_HOME as string, 'calls', '2026-09-01.jsonl')
-    await Bun.write(file, `${JSON.stringify(call)}\nnot json at all\n`)
+    // The file appendCall just wrote, found rather than named. Naming it
+    // hardcoded the day the test was written, so from the next morning the
+    // corrupt line went into a second file and both were read.
+    const dir = join(process.env.ARIADNE_HOME as string, 'calls')
+    const [name] = readdirSync(dir)
+    await Bun.write(join(dir, name as string), `${JSON.stringify(call)}\nnot json at all\n`)
     expect(readCalls()).toHaveLength(1)
   })
 
