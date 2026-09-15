@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.8](https://github.com/AraneaDev/ariadne/compare/v0.0.7...v0.0.8) (2026-09-15)
+
+
+### Documentation
+
+* **readme:** credit the author and link the write-up ([#14](https://github.com/AraneaDev/ariadne/issues/14)) ([dd14fc4](https://github.com/AraneaDev/ariadne/commit/dd14fc458f75a6e16a3852354e4d535bf000add6))
+
 ## [0.0.7](https://github.com/AraneaDev/ariadne/compare/v0.0.6...v0.0.7) (2026-09-08)
 
 
