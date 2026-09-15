@@ -171,6 +171,7 @@ Ariadne is available under the [MIT license](LICENSE).
 
 ---
 
-Built by [Aranea Development](https://aranea-development.nl). The thread is the whole
+Built by [Tim Schipper](https://tim-schipper.nl/en) and released as open source under
+[Aranea Development](https://aranea-development.nl). The thread is the whole
 myth: Theseus walks out of the labyrinth because someone kept a record of where he
 had been.
