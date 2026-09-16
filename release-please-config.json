@@ -9,7 +9,7 @@
       "bump-minor-pre-major": true,
       "bump-patch-for-minor-pre-major": true,
       "changelog-path": "CHANGELOG.md",
-      "exclude-paths": ["README.md", "CHANGELOG.md", "docs", "test", "tests", ".github", "assets"],
+      "exclude-paths": ["README.md", "CHANGELOG.md", "docs", "test", "tests", ".github", "release-please-config.json", "assets"],
       "extra-files": [
         { "type": "json", "path": ".claude-plugin/plugin.json", "jsonpath": "$.version" }
       ],
