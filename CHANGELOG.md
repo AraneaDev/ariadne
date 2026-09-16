@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.10](https://github.com/AraneaDev/ariadne/compare/v0.0.9...v0.0.10) (2026-09-16)
+
+
+### Continuous integration
+
+* **pr-title:** check out the base branch, not the pull request's pinned base commit ([#18](https://github.com/AraneaDev/ariadne/issues/18)) ([636d1ea](https://github.com/AraneaDev/ariadne/commit/636d1ea587f6106e0c93c69a5474d2e691f1713b))
+
 ## [0.0.9](https://github.com/AraneaDev/ariadne/compare/v0.0.8...v0.0.9) (2026-09-16)
 
 
