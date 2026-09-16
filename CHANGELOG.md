@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.11](https://github.com/AraneaDev/ariadne/compare/v0.0.10...v0.0.11) (2026-09-16)
+
+
+### Fixes
+
+* ignore release configuration changes ([#22](https://github.com/AraneaDev/ariadne/issues/22)) ([f6c79f2](https://github.com/AraneaDev/ariadne/commit/f6c79f2c12df3f84b7e175d8548d04f47626945b))
+
+
+### Documentation
+
+* refresh README and release filters ([#20](https://github.com/AraneaDev/ariadne/issues/20)) ([285855d](https://github.com/AraneaDev/ariadne/commit/285855d1011514d9cac24113ff715cc3d0692e86))
+
 ## [0.0.10](https://github.com/AraneaDev/ariadne/compare/v0.0.9...v0.0.10) (2026-09-16)
 
 
