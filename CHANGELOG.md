@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.9](https://github.com/AraneaDev/ariadne/compare/v0.0.8...v0.0.9) (2026-09-16)
+
+
+### Continuous integration
+
+* **pr-title:** share one commit-style rule between CI and the hook ([#16](https://github.com/AraneaDev/ariadne/issues/16)) ([776e965](https://github.com/AraneaDev/ariadne/commit/776e965a1303260e0bbdc3397cc9d2dfbb550dce))
+
 ## [0.0.8](https://github.com/AraneaDev/ariadne/compare/v0.0.7...v0.0.8) (2026-09-15)
 
 
