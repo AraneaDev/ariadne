@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const root = join(import.meta.dir, '..')
@@ -40,6 +41,43 @@ describe('hooks.json', () => {
       expect(command).toContain('ariadne-hook.sh')
       expect(command).not.toContain('bin/ariadne-hook')
     }
+  })
+
+  it('exits 0 silently when CLAUDE_PLUGIN_ROOT points at a directory without the scripts', async () => {
+    // Cursor runs imported plugin hooks with another plugin's root in
+    // CLAUDE_PLUGIN_ROOT. `sh` on a missing file exits 2, which a PreToolUse
+    // hook reports as "block this tool call", so every tool call was refused.
+    const elsewhere = mkdtempSync(join(tmpdir(), 'other-plugin-'))
+    for (const event of ['SessionStart', 'PreToolUse', 'PostToolUse']) {
+      const command: string = hooks[event][0].hooks[0].command
+      const proc = Bun.spawn(['sh', '-c', command], {
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: elsewhere },
+        stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
+      })
+      proc.stdin.write('{"hook_event_name":"' + event + '"}')
+      await proc.stdin.end()
+      const [out, err, code] = await Promise.all([
+        new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited,
+      ])
+      expect({ event, code, out, err }).toEqual({ event, code: 0, out: '', err: '' })
+    }
+  })
+
+  it('still runs the shim when CLAUDE_PLUGIN_ROOT is right', async () => {
+    const pluginRoot = mkdtempSync(join(tmpdir(), 'ariadne-plugin-'))
+    mkdirSync(join(pluginRoot, 'hooks', 'scripts'), { recursive: true })
+    mkdirSync(join(pluginRoot, 'bin'), { recursive: true })
+    copyFileSync(join(root, 'hooks/scripts/ariadne-hook.sh'), join(pluginRoot, 'hooks/scripts/ariadne-hook.sh'))
+    writeFileSync(join(pluginRoot, 'bin', 'ariadne-hook'), '#!/bin/sh\ncat >/dev/null\necho ran\n')
+    chmodSync(join(pluginRoot, 'bin', 'ariadne-hook'), 0o755)
+    const proc = Bun.spawn(['sh', '-c', hooks.PreToolUse[0].hooks[0].command], {
+      env: { ...process.env, CLAUDE_PLUGIN_ROOT: pluginRoot },
+      stdin: 'pipe', stdout: 'pipe', stderr: 'pipe',
+    })
+    proc.stdin.end()
+    const [out, code] = await Promise.all([new Response(proc.stdout).text(), proc.exited])
+    expect(out.trim()).toBe('ran')
+    expect(code).toBe(0)
   })
 
   it('registers SessionStart for the build ladder and the prober', () => {
