@@ -23,8 +23,12 @@ Per server, per session, from the traffic on your own machine.
 > leaves your MCP servers exactly as they are, and tells you what each one costs you
 > on every turn and which ones you never reach for.
 
-[MCP Observatory](https://mcpobservatory.com/) grades a server before you install
-it. Ariadne measures the one you already run.
+**TL;DR:** Ariadne measures the real cost and reach of the MCP servers you already run. It
+combines hook records, live server probes, and Claude Code's local MCP logs to report definition
+size, calls, latency, results, and connection history per server and session.
+
+[MCP Observatory](https://mcpobservatory.com/) grades a server before you install it. Ariadne
+measures the one you already run.
 
 ## What it measures
 

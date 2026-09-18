@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.10](https://github.com/AraneaDev/ariadne/compare/v0.0.9...v0.0.10) (2026-09-16)
+
+
+### Continuous integration
+
+* **pr-title:** check out the base branch, not the pull request's pinned base commit ([#18](https://github.com/AraneaDev/ariadne/issues/18)) ([636d1ea](https://github.com/AraneaDev/ariadne/commit/636d1ea587f6106e0c93c69a5474d2e691f1713b))
+
+## [0.0.9](https://github.com/AraneaDev/ariadne/compare/v0.0.8...v0.0.9) (2026-09-16)
+
+
+### Continuous integration
+
+* **pr-title:** share one commit-style rule between CI and the hook ([#16](https://github.com/AraneaDev/ariadne/issues/16)) ([776e965](https://github.com/AraneaDev/ariadne/commit/776e965a1303260e0bbdc3397cc9d2dfbb550dce))
+
+## [0.0.8](https://github.com/AraneaDev/ariadne/compare/v0.0.7...v0.0.8) (2026-09-15)
+
+
+### Documentation
+
+* **readme:** credit the author and link the write-up ([#14](https://github.com/AraneaDev/ariadne/issues/14)) ([dd14fc4](https://github.com/AraneaDev/ariadne/commit/dd14fc458f75a6e16a3852354e4d535bf000add6))
+
 ## [0.0.7](https://github.com/AraneaDev/ariadne/compare/v0.0.6...v0.0.7) (2026-09-08)
 
 
