@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.11](https://github.com/AraneaDev/ariadne/compare/v0.0.10...v0.0.11) (2026-09-18)
+
+
+### Fixes
+
+* **hooks:** exit 0 when CLAUDE_PLUGIN_ROOT does not hold the scripts ([#24](https://github.com/AraneaDev/ariadne/issues/24)) ([08e9908](https://github.com/AraneaDev/ariadne/commit/08e990889ab7378b9478006ba61c451a9d676455))
+* ignore release configuration changes ([#22](https://github.com/AraneaDev/ariadne/issues/22)) ([f6c79f2](https://github.com/AraneaDev/ariadne/commit/f6c79f2c12df3f84b7e175d8548d04f47626945b))
+
 ## [0.0.10](https://github.com/AraneaDev/ariadne/compare/v0.0.9...v0.0.10) (2026-09-16)
 
 
