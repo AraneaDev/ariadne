@@ -77,10 +77,14 @@ disappears, the history goes and every other number stands.
 
 ## Install
 
-```bash
-claude plugin marketplace add https://aranea-development.nl/plugins/marketplace.json
+<!-- aranea-install:start -->
+Install from the Aranea marketplace:
+
+```sh
+claude plugin marketplace add https://github.com/AraneaDev/aranea-marketplace
 claude plugin install ariadne@aranea
 ```
+<!-- aranea-install:end -->
 
 The first session after install builds the hook binary in the background and
 tells you so. From the next session, Ariadne is recording.
