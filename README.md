@@ -10,7 +10,7 @@
 [![Language](https://img.shields.io/github/languages/top/AraneaDev/ariadne)](https://github.com/AraneaDev/ariadne)
 [![Last commit](https://img.shields.io/github/last-commit/AraneaDev/ariadne?label=last%20commit)](https://github.com/AraneaDev/ariadne/commits/main)
 [![Conventional Commits](https://img.shields.io/badge/commits-conventional-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/)
-[![Tool page](https://img.shields.io/badge/tool%20page-aranea--development.nl-0b7285)](https://aranea-development.nl/en/tools/ariadne)
+[![Tool page](https://img.shields.io/badge/tool%20page-aranea.dev-0b7285)](https://aranea.dev/en/tools/ariadne)
 [![Status](https://img.shields.io/badge/status-pre--release-orange)](#install)
 
 </div>
@@ -180,6 +180,6 @@ Ariadne is available under the [MIT license](LICENSE).
 ---
 
 Built by [Tim Schipper](https://tim-schipper.nl/en) and released as open source under
-[Aranea Development](https://aranea-development.nl). The thread is the whole
+[aranea.dev](https://aranea.dev). The thread is the whole
 myth: Theseus walks out of the labyrinth because someone kept a record of where he
 had been.
